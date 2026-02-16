@@ -11,22 +11,20 @@
 
 <PageTitle>WorkItem's dashboard</PageTitle>
 
-<MudText Typo="Typo.h2">WorkItem's dashboard</MudText>
-
 @if (Elements?.Value != null)
 {
-    <MudTable Items="@Elements.Value" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="(wi) => FilterFunc(wi, searchString1)" @bind-SelectedItem="selectedItem1">
+    <MudTable Items="@Elements.Value" MultiSelection="true" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="(wi) => FilterFunc(wi, searchString1)" @bind-SelectedItem="selectedItem1" @bind-SelectedItems="selectedItems" @bind-SortLabel="sortLabel" @bind-SortDirection="sortDirection">
         <ToolBarContent>
             <MudText Typo="Typo.h6">WorkItems</MudText>
             <MudSpacer />
-            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
         </ToolBarContent>
         <HeaderContent>
-            <MudTh>Id</MudTh>
-            <MudTh>Title</MudTh>
-            <MudTh>WorkItemType</MudTh>
-            <MudTh>Description</MudTh>
-            <MudTh>Rev</MudTh>
+            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Id" SortDirection="@sortDirection">Id</MudTableSortLabel></MudTh>
+            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Title" SortDirection="@sortDirection">Title</MudTableSortLabel></MudTh>
+            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="WorkItemType" SortDirection="@sortDirection">WorkItemType</MudTableSortLabel></MudTh>
+            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Description" SortDirection="@sortDirection">Description</MudTableSortLabel></MudTh>
+            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Rev" SortDirection="@sortDirection">Rev</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Id">@context.Id</MudTd>
@@ -61,11 +59,15 @@ else
     private bool hover = true;
     private bool striped = false;
     private bool bordered = false;
-    private string searchString1 = "";
-    private WorkItemResponse? selectedItem1 = null;
-    private HashSet<WorkItemResponse> selectedItems = new HashSet<WorkItemResponse>();
 
+    private string sortLabel = "";
+    private string searchString1 = "";
+
+    private WorkItemResponse? selectedItem1 = null;
     private WorkItemListResponse? Elements;
+
+    private HashSet<WorkItemResponse> selectedItems = new HashSet<WorkItemResponse>();
+    private SortDirection sortDirection = SortDirection.None;
 
     protected override async Task OnInitializedAsync()
     {
