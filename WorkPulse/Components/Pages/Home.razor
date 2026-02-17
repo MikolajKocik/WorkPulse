@@ -11,48 +11,71 @@
 
 <PageTitle>WorkItem's dashboard</PageTitle>
 
-@if (Elements?.Value != null)
-{
-    <MudTable Items="@Elements.Value" MultiSelection="true" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="(wi) => FilterFunc(wi, searchString1)" @bind-SelectedItem="selectedItem1" @bind-SelectedItems="selectedItems" @bind-SortLabel="sortLabel" @bind-SortDirection="sortDirection">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">WorkItems</MudText>
-            <MudSpacer />
-            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Id" SortDirection="@sortDirection">Id</MudTableSortLabel></MudTh>
-            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Title" SortDirection="@sortDirection">Title</MudTableSortLabel></MudTh>
-            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="WorkItemType" SortDirection="@sortDirection">WorkItemType</MudTableSortLabel></MudTh>
-            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Description" SortDirection="@sortDirection">Description</MudTableSortLabel></MudTh>
-            <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Rev" SortDirection="@sortDirection">Rev</MudTableSortLabel></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
-            <MudTd DataLabel="Title">@(context.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "N/A")</MudTd>
-            <MudTd DataLabel="WorkItemType">@(context.Fields.GetValueOrDefault("System.WorkItemType")?.ToString() ?? "N/A")</MudTd>
-            <MudTd DataLabel="Description">@(context.Fields.GetValueOrDefault("System.Description")?.ToString() ?? "N/A")</MudTd>
-            <MudTd DataLabel="Rev">@context.Rev</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
-}
-else
-{
-    <MudText>Loading work items...</MudText>
-}
-
-<div class="d-flex flex-wrap mt-4">
-    <MudSwitch @bind-Value="hover" Color="Color.Primary">Hover</MudSwitch>
-    <MudSwitch @bind-Value="dense" Color="Color.Secondary">Dense</MudSwitch>
-    <MudSwitch @bind-Value="striped" Color="Color.Tertiary">Striped</MudSwitch>
-    <MudSwitch @bind-Value="bordered" Color="Color.Warning">Bordered</MudSwitch>
-    <MudSpacer />
-    <div style="min-width:200px;">
-        <MudText Class="align-self-center d-inline">Selected1: @(selectedItem1?.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "None")</MudText>
-    </div>
-</div>
+<MudGrid>
+    <MudItem md="12">
+        <MudPaper class="d-flex align-center justify-center mud-width-full py-8">
+            @if (Elements?.Value != null)
+            {
+                <MudTable Items="@Elements.Value" MultiSelection="true" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="(wi) => FilterFunc(wi, searchString1)" @bind-SelectedItem="selectedItem1" @bind-SelectedItems="selectedItems" @bind-SortLabel="sortLabel" @bind-SortDirection="sortDirection">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">WorkItems</MudText>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Id" SortDirection="@sortDirection">Id</MudTableSortLabel></MudTh>
+                        <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Title" SortDirection="@sortDirection">Title</MudTableSortLabel></MudTh>
+                        <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="WorkItemType" SortDirection="@sortDirection">WorkItemType</MudTableSortLabel></MudTh>
+                        <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Description" SortDirection="@sortDirection">Description</MudTableSortLabel></MudTh>
+                        <MudTh Sortable="true"><MudTableSortLabel T="WorkItemResponse" SortLabel="Rev" SortDirection="@sortDirection">Rev</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Id">@context.Id</MudTd>
+                        <MudTd DataLabel="Title">@(context.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "N/A")</MudTd>
+                        <MudTd DataLabel="WorkItemType">@(context.Fields.GetValueOrDefault("System.WorkItemType")?.ToString() ?? "N/A")</MudTd>
+                        <MudTd DataLabel="Description">@(context.Fields.GetValueOrDefault("System.Description")?.ToString() ?? "N/A")</MudTd>
+                        <MudTd DataLabel="Rev">@context.Rev</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            }
+            else
+            {
+                <MudText>Loading work items...</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+    <MudItem md="6">
+        <MudPaper>
+            <div class="d-flex flex-row flex-wrap mt-4 gap-2">
+                <MudSwitch @bind-Value="hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Value="dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Value="striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Value="bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudSpacer />
+                <div style="min-width:200px;">
+                    <MudText Class="align-self-center d-inline">
+                        Selected work item: @(selectedItem1?.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "None")
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem md="6">
+        <MudPaper>
+            <div class="d-flex flex-column flex-wrap mt-4 gap-2 me-auto">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Create" Color="Color.Primary">
+                    Create Work Item
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">
+                    Delete Work Item
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     private bool dense = false;
@@ -79,7 +102,7 @@ else
             "System.Description"
         ];
 
-        Elements = await wiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
+        this.Elements = await this.wiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
     }
 
     private bool FilterFunc(WorkItemResponse wi, string searchString)
