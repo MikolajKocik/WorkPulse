@@ -1,18 +1,26 @@
 ﻿@using System.Net.Http.Json
+@using Azure
 @using Azure.API.Services
+@using Azure.API.Utils
+@using Azure.API.WorkItems.Requests
 @using Azure.API.WorkItems.Responses
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Web
+@using Components.Pages.WorkItem
 
-@inject WorkItemService wiService
+@inject WorkItemService WiService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
 @attribute [Authorize]
-
 @page "/"
 
 <PageTitle>WorkItem's dashboard</PageTitle>
 
 <MudGrid>
-    <MudItem md="12" Class="d-flex align-center justify-center mud-width-full py-8">
+    <MudItem md="12" Class="d-flex flex-column align-center justify-center mud-width-full py-8 mt-4">
         @if (Elements?.Value != null)
         {
             <MudTable 
@@ -24,9 +32,7 @@
                 Striped="@striped" 
                 Filter="(wi) => FilterFunc(wi, searchString1)" 
                 @bind-SelectedItem="selectedItem" 
-                @bind-SelectedItems="selectedItems" 
-                @bind-SortLabel="sortLabel" 
-                @bind-SortDirection="sortDirection">
+                @bind-SelectedItems="selectedItems">
                 <!-- content -->
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">WorkItems</MudText>
@@ -42,27 +48,42 @@
                     </MudTextField>
                 </ToolBarContent>
                 <HeaderContent>
-                    <MudTh Sortable="true">
+                    <MudTh>
                         <MudTableSortLabel T="WorkItemResponse" SortLabel="Id" SortDirection="@sortDirection">
                             Id
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh Sortable="true">
+                    <MudTh>
                         <MudTableSortLabel T="WorkItemResponse" SortLabel="Title" SortDirection="@sortDirection">
                             Title
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh Sortable="true">
+                    <MudTh>
+                        <MudTableSortLabel T="WorkItemResponse" SortLabel="AssignedTo" SortDirection="@sortDirection">
+                            AssignedTo
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
                         <MudTableSortLabel T="WorkItemResponse" SortLabel="WorkItemType" SortDirection="@sortDirection">
                             WorkItemType
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh Sortable="true">
+                    <MudTh>
                         <MudTableSortLabel T="WorkItemResponse" SortLabel="Description" SortDirection="@sortDirection">
                             Description
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh Sortable="true">
+                    <MudTh>
+                        <MudTableSortLabel T="WorkItemResponse" SortLabel="State" SortDirection="@sortDirection">
+                            State
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
+                        <MudTableSortLabel T="WorkItemResponse" SortLabel="Tags" SortDirection="@sortDirection">
+                            Tags
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
                         <MudTableSortLabel T="WorkItemResponse" SortLabel="Rev" SortDirection="@sortDirection">
                             Rev
                         </MudTableSortLabel>
@@ -70,19 +91,40 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Id">
-                        @context.Id
+                        @context?.Id
                     </MudTd>
                     <MudTd DataLabel="Title">
-                        @(context.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "N/A")
+                        @(context?.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "N/A")
+                    </MudTd>
+                    <MudTd DataLabel="Assigned To">
+                        @(HtmlUtils.GetDisplayName(context?.Fields.GetValueOrDefault("System.AssignedTo")))
                     </MudTd>
                     <MudTd DataLabel="WorkItemType">
-                        @(context.Fields.GetValueOrDefault("System.WorkItemType")?.ToString() ?? "N/A")
+                        @(context?.Fields.GetValueOrDefault("System.WorkItemType")?.ToString() ?? "N/A")
                     </MudTd>
                     <MudTd DataLabel="Description">
-                        @(context.Fields.GetValueOrDefault("System.Description")?.ToString() ?? "N/A")
+                        @HtmlUtils.GetPlainText(context?.Fields.GetValueOrDefault("System.Description")?.ToString() ?? "N/A")
+                    </MudTd>
+                    <MudTd DataLabel="State">
+                        @(context?.Fields.GetValueOrDefault("System.State")?.ToString() ?? "N/A")
+                    </MudTd>
+                    <MudTd DataLabel="Tags">
+                        @(context?.Fields.GetValueOrDefault("System.Tags")?.ToString() ?? "N/A")
                     </MudTd>
                     <MudTd DataLabel="Rev">
-                        @context.Rev
+                        @context?.Rev
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Class="p-2">
+                        <MudIconButton 
+                            Variant="Variant.Outlined" 
+                            Icon="@Icons.Material.Filled.Edit" 
+                            Color="Color.Warning" 
+                            OnClick="@(() => OpenEditWorkItemDialog(context!.Id))" />
+                        <MudIconButton 
+                            Variant="Variant.Outlined" 
+                            Icon="@Icons.Material.Filled.Delete" 
+                            Color="Color.Error" 
+                            OnClick="@(() => DeleteWorkItem(context!.Id))" />
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -93,36 +135,32 @@
         else
         {
             <MudText>Loading work items...</MudText>
-        }
+        }          
     </MudItem>
-    <MudItem md="6">
-        <MudPaper>
-                <div style="min-width:200px;">
-                    <MudText Class="align-self-center d-inline">
-                        Selected work item: @(selectedItem?.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "None")
-                    </MudText>
-                </div>
-            <div class="d-flex flex-row flex-wrap mt-4 gap-2">
-                <MudSwitch @bind-Value="hover" Color="Color.Primary">Hover</MudSwitch>
-                <MudSwitch @bind-Value="dense" Color="Color.Secondary">Dense</MudSwitch>
-                <MudSwitch @bind-Value="striped" Color="Color.Tertiary">Striped</MudSwitch>
-                <MudSwitch @bind-Value="bordered" Color="Color.Warning">Bordered</MudSwitch>
-                <MudSpacer />
-            </div>
+</MudGrid>
+<MudGrid Class="align-center" Spacing="4">
+     <MudItem xs="12" md="3">
+        <MudPaper Class="d-flex align-center justify-center py-3">
+            <MudText>
+                Selected work item: @(selectedItem?.Fields.GetValueOrDefault("System.Title")?.ToString() ?? "None")
+            </MudText>    
+        </MudPaper>  
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="d-flex align-center justify-center py-2 px-2">              
+            <MudSwitch @bind-Value="hover" Color="Color.Primary">Hover</MudSwitch>
+            <MudSwitch @bind-Value="dense" Color="Color.Secondary">Dense</MudSwitch>
+            <MudSwitch @bind-Value="striped" Color="Color.Tertiary">Striped</MudSwitch>
+            <MudSwitch @bind-Value="bordered" Color="Color.Warning">Bordered</MudSwitch>
+            <MudSpacer />
         </MudPaper>
     </MudItem>
-    <MudItem md="6">
-        <div class="d-flex flex-row flex-nowrap mt-4 gap-3 justify-center align-center">
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Create" Color="Color.Primary">
-                    Create Work Item
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning">
-                    Edit Work Item
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">
-                    Delete Work Item
-                </MudButton>
-            </div>
+    <MudItem xs="12" md="3" Class="mb-3">
+        <div class="d-flex mt-4 gap-3 justify-center align-center">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary" OnClick="OpenCreateWorkItemDialog">
+                Create Work Item
+            </MudButton>
+        </div>
     </MudItem>
 </MudGrid>
 
@@ -132,7 +170,6 @@
     private bool striped = false;
     private bool bordered = false;
 
-    private string sortLabel = "";
     private string searchString1 = "";
 
     private WorkItemResponse? selectedItem = null;
@@ -143,15 +180,23 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         int[] ids = Enumerable.Range(1, 20).ToArray();
         string[] fields = [
             "System.Id",
             "System.Title",
+            "System.AssignedTo",
             "System.WorkItemType",
-            "System.Description"
+            "System.Description",
+            "System.State",     
+            "System.Tags"
         ];
 
-        this.Elements = await this.wiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
+        this.Elements = await this.WiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
     }
 
     private bool FilterFunc(WorkItemResponse wi, string searchString)
@@ -171,5 +216,82 @@
             return true;
 
         return false;
+    }
+
+    private async Task OpenEditWorkItemDialog(int id)
+    {
+        var parameters = new DialogParameters<EditWorkItemModal>
+        {
+            { x => x.WorkItemId, id }
+        };  
+
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true 
+        };
+
+        IDialogReference dialog = await this.DialogService.ShowAsync<EditWorkItemModal>($"Edit Work Item: {id}", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (result != null )
+        {
+            if (!result.Canceled)
+            {
+                Snackbar.Add("Work Item has been editied!", Severity.Success);
+                await LoadData();
+            }
+        }    
+    } 
+
+    private async Task OpenCreateWorkItemDialog()
+    {
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true 
+        };
+
+        IDialogReference dialog = await this.DialogService.ShowAsync<CreateWorkItemModal>("Create Work Item", options);
+        
+        var result = await dialog.Result;
+
+        if (result != null)
+        {
+            if (!result.Canceled)
+            {
+                Snackbar.Add("Work item has been created!", Severity.Success);
+                await LoadData();
+            }
+        }  
+    }
+
+    private async Task DeleteWorkItem(int id)
+    {
+        bool? result = await this.DialogService.ShowMessageBox(
+            title: "Delete Work Item",
+            message: $"Are you sure to delete the Work Item with ID: {id}?",
+            yesText: "Delete",
+            cancelText: "Cancel"
+        );
+
+        if (result == true)
+        {
+            try 
+            {
+                await this.WiService.DeleteWorkItemAsync(id);
+
+                Snackbar.Add("Work Item has been deleted!", Severity.Success);
+
+                await LoadData();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

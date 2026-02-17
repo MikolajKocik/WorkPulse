@@ -6,7 +6,6 @@ using Azure.API.Config;
 using Azure.API.Utils;
 using Azure.API.WorkItems.Requests;
 using Azure.API.WorkItems.Responses;
-using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -88,7 +87,29 @@ public sealed class WorkItemService
         }
     }
 
-    public async Task<string> CreateWorkItem(WorkItemRequest request, string? type = null, CancellationToken ct = default)
+    public async Task<WorkItemResponse> GetWorkItemInfoAsync(int id)
+    {
+        string[] wis = WorkItemConnectionParameters();
+
+        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version={wis[2]}";
+        using HttpResponseMessage response = await this.httpClient.GetAsync(url);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>();
+            return result!;
+        }
+        else 
+        {
+            HttpStatusCode status = response.StatusCode;
+            string? reason = response.ReasonPhrase;
+
+            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            throw new HttpRequestException($"API Error: {status} - {reason}");
+        }
+    }
+
+    public async Task<string> CreateWorkItemAsync(WorkItemRequest request, string? type = null, CancellationToken ct = default)
     {
         string[] wis = WorkItemConnectionParameters();
         
@@ -106,7 +127,7 @@ public sealed class WorkItemService
 
         string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/${type}?api-version={wis[2]}";
 
-        List<object> operations = WorkItemUtils.CreateOperations(request);
+        List<object> operations = WorkItemUtils.RequestOperations(request);
 
         string json = JsonSerializer.Serialize(operations);
         var content = new StringContent(json , Encoding.UTF8, "application/json-patch+json");
@@ -114,6 +135,55 @@ public sealed class WorkItemService
         using HttpResponseMessage response = await this.httpClient.PostAsync(url, content, ct);
         
         if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            return result;
+        }
+        else 
+        {
+            HttpStatusCode status = response.StatusCode;
+            string? reason = response.ReasonPhrase;
+
+            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            throw new HttpRequestException($"API Error: {status} - {reason}");
+        }
+    }
+
+    public async Task<bool> DeleteWorkItemAsync(int id)
+    {
+        
+        string[] wis = WorkItemConnectionParameters();
+        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version={wis[2]}";
+
+        using HttpResponseMessage response = await this.httpClient.DeleteAsync(url);
+
+         if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+        else 
+        {
+            HttpStatusCode status = response.StatusCode;
+            string? reason = response.ReasonPhrase;
+
+            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            throw new HttpRequestException($"API Error: {status} - {reason}");
+        }
+    }
+
+    public async Task<string> UpdateWorkItemAsync(int id, WorkItemRequest request, CancellationToken ct = default)
+    {
+        string[] wis = WorkItemConnectionParameters();
+        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version={wis[2]}";
+
+        List<object> operations = WorkItemUtils.RequestOperations(request);
+
+        string json = JsonSerializer.Serialize(operations);
+        var content = new StringContent(json , Encoding.UTF8, "application/json-patch+json");
+
+        using HttpResponseMessage response = await this.httpClient.PatchAsync(url, content, ct);
+
+         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadAsStringAsync();
             return result;

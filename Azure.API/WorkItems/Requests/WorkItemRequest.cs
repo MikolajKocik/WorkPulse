@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Azure.API.WorkItems.Requests;
 
@@ -14,6 +16,9 @@ public class WorkItemRequest
     /// <summary>
     /// Title of the work item (required in Azure DevOps).
     /// </summary>
+    [Required(ErrorMessage = "Title is required")]
+    [MinLength(5, ErrorMessage = "Min length of title is 5 characters")]
+    [MaxLength(80, ErrorMessage = "Max length of title is 80 characters")]
     public string Title { get; set; }
 
     /// <summary>

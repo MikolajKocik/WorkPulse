@@ -1,0 +1,95 @@
+@using Azure.API.Services
+@using Azure.API.Utils
+@using Azure.API.WorkItems.Requests
+@inject WorkItemService WiService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (request != null)
+        {
+            <EditForm Model="@request" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                
+                <MudTextField Label="Title" @bind-Value="request.Title" For="@(() => request.Title)" Required="true" />
+                <MudTextField Label="Description" @bind-Value="request.Description" For="@(() => request.Description)" Lines="3" />
+                <MudTextField Label="Assigned To" @bind-Value="request.AssignedTo" For="@(() => request.AssignedTo)" />
+                <MudNumericField Label="Priority" @bind-Value="request.Priority" For="@(() => request.Priority)" Min="1" Max="4" />
+                <MudTextField Label="Tags" @bind-Value="request.Tags" For="@(() => request.Tags)" />
+                <MudTextField Label="Area Path" @bind-Value="request.AreaPath" For="@(() => request.AreaPath)" />
+                <MudTextField Label="Iteration Path" @bind-Value="request.IterationPath" For="@(() => request.IterationPath)" />
+            </EditForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="HandleValidSubmit" Disabled="@(isLoading || isSubmitting)">
+            Save Changes
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] 
+    IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] 
+    public int WorkItemId { get; set; }
+
+    private WorkItemRequest request = new WorkItemRequest();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var existingData = await WiService.GetWorkItemInfoAsync(WorkItemId);
+            
+            request.Title = existingData.Fields.GetValueOrDefault("System.Title")?.ToString() ?? string.Empty;
+            request.Description = HtmlUtils.GetPlainText(existingData.Fields.GetValueOrDefault("System.Description")?.ToString() ?? string.Empty);
+            request.AssignedTo = HtmlUtils.GetDisplayName(existingData.Fields.GetValueOrDefault("System.AssignedTo")?.ToString());
+            if (existingData.Fields.TryGetValue("Microsoft.VSTS.Common.Priority", out var priorityObj) && int.TryParse(priorityObj?.ToString(), out var priority))
+                request.Priority = priority;
+            else
+                request.Priority = null;
+            request.Tags = existingData.Fields.GetValueOrDefault("System.Tags")?.ToString();
+            request.AreaPath = existingData.Fields.GetValueOrDefault("System.AreaPath")?.ToString();
+            request.IterationPath = existingData.Fields.GetValueOrDefault("System.IterationPath")?.ToString();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to load work item data.", Severity.Error);
+            MudDialog.Cancel(); 
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            await WiService.UpdateWorkItemAsync(WorkItemId, request);
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

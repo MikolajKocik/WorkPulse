@@ -1,0 +1,60 @@
+@using Azure.API.Services
+@using Azure.API.WorkItems.Requests
+@inject WorkItemService WiService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@request" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            
+            <MudTextField Label="Title" @bind-Value="request.Title" For="@(() => request.Title)" Required="true" />
+            <MudTextField Label="Description" @bind-Value="request.Description" For="@(() => request.Description)" Lines="3" />
+            <MudTextField Label="Assigned To" @bind-Value="request.AssignedTo" For="@(() => request.AssignedTo)" />
+            <MudNumericField Label="Priority" @bind-Value="request.Priority" For="@(() => request.Priority)" Min="1" Max="4" />
+            <MudTextField Label="Tags" @bind-Value="request.Tags" For="@(() => request.Tags)" />
+            <MudTextField Label="Area Path" @bind-Value="request.AreaPath" For="@(() => request.AreaPath)" />
+            <MudTextField Label="Iteration Path" @bind-Value="request.IterationPath" For="@(() => request.IterationPath)" />
+            </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleValidSubmit" Disabled="@isSubmitting">
+            @if (isSubmitting) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/> }
+            else { <span>Create</span> }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private WorkItemRequest request = new WorkItemRequest();
+    private bool isSubmitting = false;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+
+            await this.WiService.CreateWorkItemAsync(request);
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    } 
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

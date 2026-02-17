@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Azure.API.WorkItems.Requests;
 
 namespace Azure.API.Utils;
@@ -13,7 +12,7 @@ public static class WorkItemUtils
     /// </summary>
     /// <param name="request">The work item request data.</param>
     /// <returns>List of operations for Azure DevOps API.</returns>
-    public static List<object> CreateOperations(WorkItemRequest request)
+    public static List<object> RequestOperations(WorkItemRequest request)
     {
         var operations = new List<object>();
 
@@ -87,5 +86,5 @@ public static class WorkItemUtils
         }
 
         return operations;
-    }
+    }    
 }
