@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Azure.API.WorkItems.Responses;
+namespace Azure.API.Models.WorkItems.Responses;
 
 /// <summary>
 /// Response model for a created Work Item from Azure DevOps API.

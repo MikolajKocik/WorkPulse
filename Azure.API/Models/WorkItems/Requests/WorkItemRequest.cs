@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Azure.API.WorkItems.Requests;
+namespace Azure.API.Models.WorkItems.Requests;
 
 /// <summary>
 /// Request model for creating a Work Item (Task or User Story).

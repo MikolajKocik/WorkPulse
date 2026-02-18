@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Azure.API.WorkItems.Requests;
+namespace Azure.API.Models.WorkItems.Requests;
 
 /// <summary>
 /// Request model for batch getting work items.

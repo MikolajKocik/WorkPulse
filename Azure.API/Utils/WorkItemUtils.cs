@@ -1,4 +1,4 @@
-using Azure.API.WorkItems.Requests;
+using Azure.API.Models.WorkItems.Requests;
 
 namespace Azure.API.Utils;
 

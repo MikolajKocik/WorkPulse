@@ -14,6 +14,5 @@ public class WorkItemURI
     public string Project { get; set; }
     public List<string> SupportedTypes { get; set; }
     public string DefaultType { get; set; }
-    public string ApiVersion { get; set; }
     public string Pat { get; set; }
 }
