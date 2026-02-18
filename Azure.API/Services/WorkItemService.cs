@@ -8,24 +8,23 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Azure.API.Models.WorkItems.Requests;
 using Azure.API.Models.WorkItems.Responses;
-using Azure.API.Client;
 
 namespace Azure.API.Services;
 
 public sealed class WorkItemService
 {
     private readonly WorkItemURI wi;
-    private readonly AzureHttpClient httpClient;
+    private readonly HttpClient httpClient;
     private readonly ILogger<WorkItemService> logger;
 
     public WorkItemService(
         IOptions<WorkItemURI> wi,
-        AzureHttpClient httpClient,
+        IHttpClientFactory httpClientFactory,
         ILogger<WorkItemService> logger
         )
     {
         this.wi = wi.Value;
-        this.httpClient = httpClient;
+        this.httpClient = httpClientFactory.CreateClient("AzureDevOps");
         this.logger = logger;
     }
 
@@ -41,7 +40,7 @@ public sealed class WorkItemService
             throw new ArgumentException("Maximum 200 IDs allowed.", nameof(ids));
         }
 
-        string[] wis = this.httpClient.WorkItemConnectionParameters();
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
         string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitemsbatch?api-version=7.1";
 
         var requestBody = new WorkItemBatchRequest
@@ -81,7 +80,7 @@ public sealed class WorkItemService
 
     public async Task<WorkItemResponse> GetWorkItemInfoAsync(int id)
     {
-        string[] wis = this.httpClient.WorkItemConnectionParameters();
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
 
         string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version=7.1";
         using HttpResponseMessage response = await this.httpClient.GetAsync(url);
@@ -96,15 +95,15 @@ public sealed class WorkItemService
             HttpStatusCode status = response.StatusCode;
             string? reason = response.ReasonPhrase;
 
-            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            logger.LogError("Error occured while loading Work Item: {StatusCode} - {Reason}", status, reason);
             throw new HttpRequestException($"API Error: {status} - {reason}");
         }
     }
 
     public async Task<string> CreateWorkItemAsync(WorkItemRequest request, string? type = null, CancellationToken ct = default)
     {
-        string[] wis = this.httpClient.WorkItemConnectionParameters();
-        
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
+
         if (type != null)
         {
             if (!this.wi.SupportedTypes.Contains(type) || string.IsNullOrWhiteSpace(type))
@@ -136,15 +135,16 @@ public sealed class WorkItemService
             HttpStatusCode status = response.StatusCode;
             string? reason = response.ReasonPhrase;
 
-            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            logger.LogError("Error during creating the Work Item: {StatusCode} - {Reason}", status, reason);
             throw new HttpRequestException($"API Error: {status} - {reason}");
         }
     }
 
     public async Task<bool> DeleteWorkItemAsync(int id)
     {
-        
-        string[] wis = this.httpClient.WorkItemConnectionParameters();
+
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
+
         string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version=7.1";
 
         using HttpResponseMessage response = await this.httpClient.DeleteAsync(url);
@@ -158,14 +158,15 @@ public sealed class WorkItemService
             HttpStatusCode status = response.StatusCode;
             string? reason = response.ReasonPhrase;
 
-            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            logger.LogError("Error during deleting Work Item: {StatusCode} - {Reason}", status, reason);
             throw new HttpRequestException($"API Error: {status} - {reason}");
         }
     }
 
     public async Task<string> UpdateWorkItemAsync(int id, WorkItemRequest request, CancellationToken ct = default)
     {
-        string[] wis = this.httpClient.WorkItemConnectionParameters();
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
+
         string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version={wis[2]}";
 
         List<object> operations = WorkItemUtils.RequestOperations(request);
@@ -185,7 +186,7 @@ public sealed class WorkItemService
             HttpStatusCode status = response.StatusCode;
             string? reason = response.ReasonPhrase;
 
-            logger.LogError("Błąd tworzenia work item: {StatusCode} - {Reason}", status, reason);
+            logger.LogError("Error during updating the Work Item: {StatusCode} - {Reason}", status, reason);
             throw new HttpRequestException($"API Error: {status} - {reason}");
         }
     }

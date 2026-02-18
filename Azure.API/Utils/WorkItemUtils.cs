@@ -1,3 +1,4 @@
+using Azure.API.Config;
 using Azure.API.Models.WorkItems.Requests;
 
 namespace Azure.API.Utils;
@@ -86,5 +87,13 @@ public static class WorkItemUtils
         }
 
         return operations;
-    }    
+    }
+
+    public static string[] WorkItemConnectionParameters(WorkItemURI wi)
+    {
+        string organization = wi.Organization;
+        string project = wi.Project;
+
+        return [organization, project];
+    }
 }
