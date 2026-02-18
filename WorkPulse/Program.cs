@@ -6,6 +6,7 @@ using System.Text;
 using Azure.API.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
+using Azure.API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +18,14 @@ builder.Services.AddMudServices();
 
 builder.Services.Configure<WorkItemURI>(builder.Configuration.GetSection("WorkItemURI"));
 
-builder.Services.AddScoped<WorkItemService>();
+builder.Services.AddScoped<IWorkItemService, WorkItemService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IAzureBoardService, AzureBoardService>();
 
 builder.Services.AddHttpClient("AzureDevOps", client =>
 {
-    var pat = builder.Configuration["WorkItemURI:Pat"];
+    var wiUri = builder.Configuration.GetSection("WorkItemURI").Get<WorkItemURI>();
+    var pat = wiUri?.Pat;
     if (!string.IsNullOrEmpty(pat))
     {
         var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{pat}"));

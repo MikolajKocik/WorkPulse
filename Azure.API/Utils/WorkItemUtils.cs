@@ -89,11 +89,16 @@ public static class WorkItemUtils
         return operations;
     }
 
+    /// <summary>
+    /// Gets the work item connection parameters.
+    /// </summary>
+    /// <param name="wi">The work item configuration.</param>
+    /// <returns>Array of work item connection parameters.</returns>
     public static string[] WorkItemConnectionParameters(WorkItemURI wi)
     {
         string organization = wi.Organization;
         string project = wi.Project;
 
-        return [organization, project];
+        return [organization, project, "7.1"];
     }
 }

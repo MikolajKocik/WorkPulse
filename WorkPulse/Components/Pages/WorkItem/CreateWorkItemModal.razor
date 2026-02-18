@@ -1,27 +1,74 @@
-@using Azure.API.Services
+@using Azure.API.Services.Interfaces
 @using Azure.API.Models.WorkItems.Requests
-@inject WorkItemService WiService
+@using Azure.API.Models.Profiles
+
+@inject IWorkItemService WiService
+@inject IAzureBoardService BoardService
+@inject IProfileService ProfileService
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
-        <EditForm Model="@request" OnValidSubmit="HandleValidSubmit">
+        <EditForm @ref="editForm" Model="@request">
             <DataAnnotationsValidator />
             
             <MudTextField Label="Title" @bind-Value="request.Title" For="@(() => request.Title)" Required="true" />
             <MudTextField Label="Description" @bind-Value="request.Description" For="@(() => request.Description)" Lines="3" />
-            <MudTextField Label="Assigned To" @bind-Value="request.AssignedTo" For="@(() => request.AssignedTo)" />
+            
+             <MudSelect T="string" @bind-Value="this.request.AssignedTo" Label="Select user profile" Variant="Variant.Outlined">
+                @if (this.profiles?.Count > 0)
+                {
+                    @foreach (var p in profiles)
+                    {
+                        <MudSelectItem T="string" Value="@p.DisplayName">@p.DisplayName</MudSelectItem>
+                    }
+                }
+                else
+                {
+                    <MudSelectItem T="string" Value="@((string?)null)" Disabled="true">No users</MudSelectItem>
+                }
+            </MudSelect>
+
             <MudNumericField Label="Priority" @bind-Value="request.Priority" For="@(() => request.Priority)" Min="1" Max="4" />
             <MudTextField Label="Tags" @bind-Value="request.Tags" For="@(() => request.Tags)" />
-            <MudTextField Label="Area Path" @bind-Value="request.AreaPath" For="@(() => request.AreaPath)" />
-            <MudTextField Label="Iteration Path" @bind-Value="request.IterationPath" For="@(() => request.IterationPath)" />
-            </EditForm>
+            
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                     <MudSelect T="string" Label="Select Area" Value="selectedArea" ValueChanged="OnAreaChanged" Clearable="true" Variant="Variant.Outlined">
+                        @foreach (var area in areaNodes)
+                        {
+                            <MudSelectItem Value="@area">@area</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" />
+            </MudGrid>
+
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                     <MudSelect T="string" Label="Select Iteration" Value="selectedIteration" ValueChanged="OnIterationChanged" Clearable="true" Variant="Variant.Outlined">
+                        @foreach (var iter in iterationNodes)
+                        {
+                            <MudSelectItem Value="@iter">@iter</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" />
+            </MudGrid>
+            
+        </EditForm>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleValidSubmit" Disabled="@isSubmitting">
-            @if (isSubmitting) { <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/> }
-            else { <span>Create</span> }
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create" Disabled="@isSubmitting">
+            @if (isSubmitting) 
+            { 
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/> 
+            }
+            else 
+            { 
+                <span>Create</span> 
+            }
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -30,8 +77,67 @@
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; } = null!;
 
+    private EditForm editForm;
     private WorkItemRequest request = new WorkItemRequest();
     private bool isSubmitting = false;
+
+    private List<Profile> profiles = new();
+    private List<string> areaNodes = new();
+    private List<string> iterationNodes = new();
+    private string? selectedArea;
+    private string? selectedIteration;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            var t1 = BoardService.GetClassificationNodesAsync("Areas");
+            var t2 = BoardService.GetClassificationNodesAsync("Iterations");
+            var t3 = ProfileService.GetUserProfilesAsync();
+            await Task.WhenAll(t1, t2, t3);
+            areaNodes = t1.Result;
+            iterationNodes = t2.Result;
+            
+            if (t3.Result?.Profiles != null)
+            {
+                profiles = t3.Result.Profiles;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load data: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private void OnAreaChanged(string value)
+    {
+        selectedArea = value;
+        if (!string.IsNullOrEmpty(value))
+        {
+            request.AreaPath = value;
+        }
+    }
+
+    private void OnIterationChanged(string value)
+    {
+        selectedIteration = value;
+        if (!string.IsNullOrEmpty(value))
+        {
+            request.IterationPath = value;
+        }
+    }
+
+    private async Task Create()
+    {
+        if (editForm.EditContext.Validate())
+        {
+            await HandleValidSubmit();
+        }
+        else
+        {
+            HandleInvalidSubmit();
+        }
+    }
 
     private async Task HandleValidSubmit()
     {
@@ -45,7 +151,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally
         {
@@ -53,8 +159,8 @@
         }
     } 
 
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
+    private void HandleInvalidSubmit() 
+        => this.Snackbar.Add("Please correct the errors in the form.", Severity.Warning);
+    
+    private void Cancel() => this.MudDialog.Cancel();
 }

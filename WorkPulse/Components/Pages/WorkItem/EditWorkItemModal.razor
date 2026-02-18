@@ -1,11 +1,12 @@
-@using Azure.API.Services
+@using Azure.API.Services.Interfaces
 @using Azure.API.Utils
 @using Azure.API.Models.WorkItems.Requests
 @using Azure.API.Models.WorkItems.Responses
 @using Azure.API.Models.Profiles
 
-@inject WorkItemService WiService
-@inject ProfileService ProfileService
+@inject IWorkItemService WiService
+@inject IAzureBoardService BoardService
+@inject IProfileService ProfileService
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -16,11 +17,11 @@
         }
         else if (request != null)
         {
-            <EditForm Model="this.request" OnValidSubmit="HandleValidSubmit">
+            <EditForm @ref="editForm" Model="this.request">
                 <DataAnnotationsValidator />
                 
                 <MudTextField T="string" Label="Title" @bind-Value="this.request.Title" For="@(() => this.request.Title)" Required="true" />
-                <MudTextField T="string" Label="this.Description" @bind-Value="this.request.Description" For="@(() => this.request.Description)" Lines="3" />               
+                <MudTextField T="string" Label="Description" @bind-Value="this.request.Description" For="@(() => this.request.Description)" Lines="3" />               
                 <MudSelect T="string" @bind-Value="this.request.AssignedTo" Label="Select user profile" Variant="Variant.Outlined">
                     @if (this.profiles?.Count > 0)
                     {
@@ -36,14 +37,37 @@
                 </MudSelect>
                 <MudNumericField T="int?" Label="Priority" @bind-Value="this.request.Priority" For="@(() => this.request.Priority)" Min="1" Max="4" />
                 <MudTextField T="string" Label="Tags" @bind-Value="this.request.Tags" For="@(() => this.request.Tags)" />
-                <MudTextField T="string" Label="Area Path" @bind-Value="this.request.AreaPath" For="@(() => this.request.AreaPath)" />
-                <MudTextField T="string" Label="Iteration Path" @bind-Value="this.request.IterationPath" For="@(() => this.request.IterationPath)" />
+                
+                <MudGrid Class="mt-2">
+                    <MudItem xs="6">
+                         <MudSelect T="string" Label="Select Area" Value="selectedArea" ValueChanged="OnAreaChanged" Clearable="true" Variant="Variant.Outlined">
+                            @foreach (var area in areaNodes)
+                            {
+                                <MudSelectItem Value="@area">@area</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6" />
+                </MudGrid>
+
+                <MudGrid Class="mt-2">
+                    <MudItem xs="6">
+                         <MudSelect T="string" Label="Select Iteration" Value="selectedIteration" ValueChanged="OnIterationChanged" Clearable="true" Variant="Variant.Outlined">
+                            @foreach (var iter in iterationNodes)
+                            {
+                                <MudSelectItem Value="@iter">@iter</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6" />
+                </MudGrid>
+
             </EditForm>
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="HandleValidSubmit" Disabled="@(this.isLoading || this.isSubmitting)">
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="Submit" Disabled="@(this.isLoading || this.isSubmitting)">
             Save Changes
         </MudButton>
     </DialogActions>
@@ -53,8 +77,14 @@
     private bool isLoading = true;
     private bool isSubmitting = false;
 
+    private EditForm editForm;
     private WorkItemRequest request = new WorkItemRequest();
     private List<Profile> profiles = new();
+    
+    private List<string> areaNodes = new();
+    private List<string> iterationNodes = new();
+    private string? selectedArea;
+    private string? selectedIteration;
 
     [CascadingParameter] 
     IMudDialogInstance MudDialog { get; set; } = null!;
@@ -66,7 +96,15 @@
     {
         try
         {
-            WorkItemResponse existingData = await WiService.GetWorkItemInfoAsync(WorkItemId);
+            var t1 = BoardService.GetClassificationNodesAsync("Areas");
+            var t2 = BoardService.GetClassificationNodesAsync("Iterations");
+            var tWi = WiService.GetWorkItemInfoAsync(WorkItemId);
+            
+            await Task.WhenAll(t1, t2, tWi);
+            
+            areaNodes = t1.Result;
+            iterationNodes = t2.Result;
+            WorkItemResponse existingData = tWi.Result;
 
             this.request.Title = existingData.Fields.GetValueOrDefault("System.Title")?.ToString() ?? string.Empty;
             this.request.Description = HtmlUtils.GetPlainText(existingData.Fields.GetValueOrDefault("System.Description")?.ToString() ?? string.Empty);
@@ -85,9 +123,19 @@
             this.request.AreaPath = existingData.Fields.GetValueOrDefault("System.AreaPath")?.ToString();
             this.request.IterationPath = existingData.Fields.GetValueOrDefault("System.IterationPath")?.ToString();
 
+            // Set initial select values if they match loaded nodes
+            if (!string.IsNullOrEmpty(this.request.AreaPath) && areaNodes.Contains(this.request.AreaPath))
+            {
+                selectedArea = this.request.AreaPath;
+            }
+            if (!string.IsNullOrEmpty(this.request.IterationPath) && iterationNodes.Contains(this.request.IterationPath))
+            {
+                selectedIteration = this.request.IterationPath;
+            }
+
             try
             {
-                var list = await this.ProfileService.GetUserProfilesAsync();
+                ProfileList list = await this.ProfileService.GetUserProfilesAsync();
                 if (list?.Profiles != null)
                     this.profiles = list.Profiles;
             }
@@ -104,6 +152,36 @@
         finally
         {
             this.isLoading = false;
+        }
+    }
+
+    private void OnAreaChanged(string value)
+    {
+        selectedArea = value;
+        if (!string.IsNullOrEmpty(value))
+        {
+            this.request.AreaPath = value;
+        }
+    }
+
+    private void OnIterationChanged(string value)
+    {
+        selectedIteration = value;
+        if (!string.IsNullOrEmpty(value))
+        {
+            this.request.IterationPath = value;
+        }
+    }
+
+    private async Task Submit()
+    {
+         if (editForm.EditContext.Validate())
+        {
+            await this.HandleValidSubmit();
+        }
+        else
+        {
+            this.HandleInvalidSubmit();
         }
     }
 
@@ -125,6 +203,9 @@
             this.isSubmitting = false;
         }
     }
+
+    private void HandleInvalidSubmit() 
+        => this.Snackbar.Add("Please correct the errors in the form.", Severity.Warning);
 
     private void Cancel() => this.MudDialog.Cancel();
 }

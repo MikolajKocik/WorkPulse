@@ -4,10 +4,12 @@ using Azure.API.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Azure.API.Services.Interfaces;
+using System.Net;
 
 namespace Azure.API.Services;
 
-public class ProfileService
+public class ProfileService : IProfileService
 {
     private HttpClient httpClient;
     private WorkItemURI wi;
@@ -26,10 +28,26 @@ public class ProfileService
 
         string url = $"https://vsaex.dev.azure.com/{wis[0]}/_apis/userentitlements?api-version=7.2-preview.5";
 
+        if (this.httpClient.DefaultRequestHeaders.Authorization == null)
+        {
+            this.logger.LogWarning("HttpClient has no Authorization header configured. Ensure PAT is set in configuration and the named client 'AzureDevOps' is configured in Program.cs.");
+        }
+
         using HttpResponseMessage response = await this.httpClient.GetAsync(url, continuationToken);
 
         if (!response.IsSuccessStatusCode)
         {
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                
+                this.logger.LogError("Failed to retrieve user profiles. Status code: Unauthorized (401). Possible causes: invalid/expired PAT or missing PAT scopes for reading user entitlements.");
+                
+                string errContent = await response.Content.ReadAsStringAsync(continuationToken);
+                this.logger.LogDebug("Unauthorized response content: {Content}", errContent);
+                
+                throw new HttpRequestException($"Request unauthorized (401). Check PAT and its scopes.");
+            }
+
             this.logger.LogError("Failed to retrieve user profiles. Status code: {StatusCode}", response.StatusCode);
             throw new HttpRequestException($"Request failed with status code: {response.StatusCode}");
         }
@@ -43,9 +61,24 @@ public class ProfileService
 
             var profiles = new List<Profile>();
 
-            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("value", out var value) && value.ValueKind == JsonValueKind.Array)
+            JsonElement itemsArray = default;
+            bool foundItems = false;
+
+            if (root.ValueKind == JsonValueKind.Object)
             {
-                foreach (var item in value.EnumerateArray())
+                if (root.TryGetProperty("items", out itemsArray) && itemsArray.ValueKind == JsonValueKind.Array)
+                {
+                    foundItems = true;
+                }
+                else if (root.TryGetProperty("value", out itemsArray) && itemsArray.ValueKind == JsonValueKind.Array)
+                {
+                    foundItems = true;
+                }
+            }
+
+            if (foundItems)
+            {
+                foreach (var item in itemsArray.EnumerateArray())
                 {
                     string id = string.Empty;
                     string displayName = string.Empty;

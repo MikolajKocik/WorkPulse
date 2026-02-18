@@ -8,10 +8,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Azure.API.Models.WorkItems.Requests;
 using Azure.API.Models.WorkItems.Responses;
+using Azure.API.Models.WorkItems;
+using Azure.API.Services.Interfaces;
 
 namespace Azure.API.Services;
 
-public sealed class WorkItemService
+public sealed class WorkItemService : IWorkItemService
 {
     private readonly WorkItemURI wi;
     private readonly HttpClient httpClient;
@@ -28,6 +30,13 @@ public sealed class WorkItemService
         this.logger = logger;
     }
 
+    /// <summary>
+    /// Gets the work item list.
+    /// </summary>
+    /// <param name="ids">The IDs of the work items.</param>
+    /// <param name="fields">The fields to include.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The work item list.</returns>
     public async Task<WorkItemListResponse> GetWorkItemListAsync(int[] ids, string[]? fields = null, CancellationToken ct = default)
     {
         if (ids == null || ids.Length == 0)
@@ -72,12 +81,16 @@ public sealed class WorkItemService
         }
         else
         {
-            string errorMessage = await response.Content.ReadAsStringAsync(ct);
-            this.logger.LogError("Failed to get work items. Status: {Status}, Error: {Error}", response.StatusCode, errorMessage);
-            throw new HttpRequestException($"Failed to get work items: {response.ReasonPhrase}");
+            await HttpUtils.HandleErrorResponse(response);
+            return null!;
         }
     }
 
+    /// <summary>
+    /// Gets the work item info.
+    /// </summary>
+    /// <param name="id">The ID of the work item.</param>
+    /// <returns>The work item info.</returns>
     public async Task<WorkItemResponse> GetWorkItemInfoAsync(int id)
     {
         string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
@@ -92,14 +105,18 @@ public sealed class WorkItemService
         }
         else 
         {
-            HttpStatusCode status = response.StatusCode;
-            string? reason = response.ReasonPhrase;
-
-            logger.LogError("Error occured while loading Work Item: {StatusCode} - {Reason}", status, reason);
-            throw new HttpRequestException($"API Error: {status} - {reason}");
+            await HttpUtils.HandleErrorResponse(response);
+            return null!;
         }
     }
 
+    /// <summary>
+    /// Creates a work item.
+    /// </summary>
+    /// <param name="request">The work item request.</param>
+    /// <param name="type">The type of the work item.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The ID of the created work item.</returns>
     public async Task<string> CreateWorkItemAsync(WorkItemRequest request, string? type = null, CancellationToken ct = default)
     {
         string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
@@ -132,14 +149,16 @@ public sealed class WorkItemService
         }
         else 
         {
-            HttpStatusCode status = response.StatusCode;
-            string? reason = response.ReasonPhrase;
-
-            logger.LogError("Error during creating the Work Item: {StatusCode} - {Reason}", status, reason);
-            throw new HttpRequestException($"API Error: {status} - {reason}");
+            await HttpUtils.HandleErrorResponse(response);
+            return null!;
         }
     }
 
+    /// <summary>
+    /// Deletes a work item.
+    /// </summary>
+    /// <param name="id">The ID of the work item.</param>
+    /// <returns>True if the work item was deleted, false otherwise.</returns>
     public async Task<bool> DeleteWorkItemAsync(int id)
     {
 
@@ -155,14 +174,18 @@ public sealed class WorkItemService
         }
         else 
         {
-            HttpStatusCode status = response.StatusCode;
-            string? reason = response.ReasonPhrase;
-
-            logger.LogError("Error during deleting Work Item: {StatusCode} - {Reason}", status, reason);
-            throw new HttpRequestException($"API Error: {status} - {reason}");
+            await HttpUtils.HandleErrorResponse(response);
+            return false;
         }
     }
 
+    /// <summary>
+    /// Updates a work item.
+    /// </summary>
+    /// <param name="id">The ID of the work item.</param>
+    /// <param name="request">The work item request.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The ID of the updated work item.</returns>
     public async Task<string> UpdateWorkItemAsync(int id, WorkItemRequest request, CancellationToken ct = default)
     {
         string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
@@ -183,11 +206,8 @@ public sealed class WorkItemService
         }
         else 
         {
-            HttpStatusCode status = response.StatusCode;
-            string? reason = response.ReasonPhrase;
-
-            logger.LogError("Error during updating the Work Item: {StatusCode} - {Reason}", status, reason);
-            throw new HttpRequestException($"API Error: {status} - {reason}");
+            await HttpUtils.HandleErrorResponse(response);
+            return null!;
         }
     }
 }
