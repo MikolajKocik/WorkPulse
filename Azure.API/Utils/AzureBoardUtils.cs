@@ -12,39 +12,39 @@ public static class AzureBoardUtils
     /// <param name="paths">The list of paths.</param>
     public static void FlattenNodePath(ClassificationNode node, List<string> paths)
     {
-        // Provide the path. The root Path usually includes the Project Name.
-        // e.g. "\Project\Area\SubArea"
-        // Clean it up slightly if it starts with \
         if (node == null) return;
 
-        // Collect all display paths (without project prefix)
         var all = new List<string>();
         CollectNodePaths(node, all);
 
-        // Filter out any path that is a strict prefix of another path (keep deeper paths only)
-        var filtered = all.Where(p => !all.Any(other => other != p && other.StartsWith(p + "\\", StringComparison.OrdinalIgnoreCase)))
-                          .Distinct(StringComparer.OrdinalIgnoreCase)
-                          .ToList();
-
-        // Append to provided paths preserving order
-        foreach (var fp in filtered)
+        foreach (var p in all.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            if (!paths.Contains(fp)) paths.Add(fp);
+            if (!paths.Contains(p, StringComparer.OrdinalIgnoreCase))
+                paths.Add(p);
         }
     }
-    
+
     private static void CollectNodePaths(ClassificationNode node, List<string> collector)
     {
         if (node == null) return;
 
-        var p = node.Path ?? string.Empty;
-        if (p.StartsWith("\\")) p = p.Substring(1);
+        var raw = node.Path ?? string.Empty;
+        if (raw.StartsWith("\\")) raw = raw.Substring(1);
 
-        var segments = p.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length > 1)
+        var segments = raw.Split('\\', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length >= 2)
         {
-            var display = string.Join("\\", segments.Skip(1));
-            if (!string.IsNullOrEmpty(display)) collector.Add(display);
+            var workItemPath = segments[0];
+            if (segments.Length > 2)
+            {
+                workItemPath += "\\" + string.Join("\\", segments.Skip(2));
+            }
+            collector.Add(workItemPath);
+        }
+        else if (segments.Length == 1)
+        {
+            collector.Add(segments[0]);
         }
 
         if (node.Children != null)

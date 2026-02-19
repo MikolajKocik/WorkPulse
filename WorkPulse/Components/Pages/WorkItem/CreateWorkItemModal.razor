@@ -112,19 +112,13 @@
     private void OnAreaChanged(string value)
     {
         selectedArea = value;
-        if (!string.IsNullOrEmpty(value))
-        {
-            request.AreaPath = value;
-        }
+        request.AreaPath = string.IsNullOrEmpty(value) ? null : value;
     }
 
     private void OnIterationChanged(string value)
     {
         selectedIteration = value;
-        if (!string.IsNullOrEmpty(value))
-        {
-            request.IterationPath = value;
-        }
+        request.IterationPath = string.IsNullOrEmpty(value) ? null : value;
     }
 
     private async Task Create()
