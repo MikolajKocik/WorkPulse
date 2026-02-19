@@ -7,6 +7,8 @@ using Azure.API.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Azure.API.Services.Interfaces;
+using WorkPulse.Services.Interfaces;
+using WorkPulse.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,9 @@ builder.Services.Configure<WorkItemURI>(builder.Configuration.GetSection("WorkIt
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAzureBoardService, AzureBoardService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddHttpClient("AzureDevOps", client =>
 {
