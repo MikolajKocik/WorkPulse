@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -151,6 +152,47 @@ public sealed class WorkItemService : IWorkItemService
         {
             await HttpUtils.HandleErrorResponse(response);
             return null!;
+        }
+    }
+
+    /// <summary>
+    /// Queries for work item IDs using WIQL.
+    /// </summary>
+    /// <param name="filter">Optional filter (not implemented yet).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Array of work item IDs.</returns>
+    public async Task<int[]> QueryWorkItemIdsAsync(string? filter = null, CancellationToken ct = default)
+    {
+        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
+        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/wiql?api-version=7.1";
+
+        var query = new
+        {
+            query = $"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project ORDER BY [System.ChangedDate] DESC"
+        };
+
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(query, jsonOptions), Encoding.UTF8, "application/json");
+        using HttpResponseMessage response = await this.httpClient.PostAsync(url, content, ct);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<WiqlResponse>(jsonOptions, ct);
+            if (result?.WorkItems != null)
+            {
+                return result.WorkItems.Select(w => w.Id).ToArray();
+            }
+            return Array.Empty<int>();
+        }
+        else
+        {
+            await HttpUtils.HandleErrorResponse(response);
+            return Array.Empty<int>();
         }
     }
 

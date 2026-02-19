@@ -11,6 +11,8 @@ namespace Azure.API.Services.Interfaces
 
         Task<string> CreateWorkItemAsync(WorkItemRequest request, string? type = null, CancellationToken ct = default);
 
+        Task<int[]> QueryWorkItemIdsAsync(string? filter = null, CancellationToken ct = default);
+
         Task<bool> DeleteWorkItemAsync(int id);
 
         Task<string> UpdateWorkItemAsync(int id, WorkItemRequest request, CancellationToken ct = default);

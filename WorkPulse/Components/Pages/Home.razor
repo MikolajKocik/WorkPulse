@@ -185,18 +185,32 @@
 
     private async Task LoadData()
     {
-        int[] ids = Enumerable.Range(1, 20).ToArray();
-        string[] fields = [
-            "System.Id",
-            "System.Title",
-            "System.AssignedTo",
-            "System.WorkItemType",
-            "System.Description",
-            "System.State",     
-            "System.Tags"
-        ];
+        try
+        {
+            int[] ids = await this.WiService.QueryWorkItemIdsAsync(ct: CancellationToken.None);
+            
+            if (ids == null || ids.Length == 0)
+            {
+                this.Elements = new WorkItemListResponse { Count = 0, Value = new List<WorkItemResponse>() };
+                return;
+            }
 
-        this.Elements = await this.WiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
+            string[] fields = [
+                "System.Id",
+                "System.Title",
+                "System.AssignedTo",
+                "System.WorkItemType",
+                "System.Description",
+                "System.State",     
+                "System.Tags"
+            ];
+
+            this.Elements = await this.WiService.GetWorkItemListAsync(ids, fields, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load work items: {ex.Message}", Severity.Error);
+        }
     }
 
     private bool FilterFunc(WorkItemResponse wi, string searchString)
