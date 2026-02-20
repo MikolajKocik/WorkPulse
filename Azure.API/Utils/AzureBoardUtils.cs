@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Azure.API.Models.WorkItems;
+using System.IO;
 
 namespace Azure.API.Utils;
 
@@ -27,16 +28,16 @@ public static class AzureBoardUtils
         if (node == null) return;
 
         var raw = node.Path ?? string.Empty;
-        if (raw.StartsWith('\\')) raw = raw.Substring(1);
+        if (raw.StartsWith(Path.DirectorySeparatorChar)) raw = raw.Substring(1);
 
-        var segments = raw.Split('\\', StringSplitOptions.RemoveEmptyEntries);
+        var segments = raw.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
 
         if (segments.Length >= 2)
         {
             var workItemPath = segments[0];
             if (segments.Length > 2)
             {
-                workItemPath += "\\" + string.Join("\\", segments.Skip(2));
+                workItemPath = Path.Combine(new[] { workItemPath }.Concat(segments.Skip(2)).ToArray());
             }
             collector.Add(workItemPath);
         }

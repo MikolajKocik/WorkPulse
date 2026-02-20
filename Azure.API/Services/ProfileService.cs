@@ -65,7 +65,7 @@ public class ProfileService : IProfileService
         throw new HttpRequestException($"Request failed with status code: {response.StatusCode}");
     }
 
-    private List<Profile> ParseProfilesFromJson(string content)
+    private static List<Profile> ParseProfilesFromJson(string content)
     {
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
