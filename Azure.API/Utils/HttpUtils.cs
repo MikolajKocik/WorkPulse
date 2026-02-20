@@ -34,7 +34,7 @@ public static class HttpUtils
         }
         catch
         {
-            if (!string.IsNullOrEmpty(content) && content.Length < 500 && !content.TrimStart().StartsWith("<"))
+            if (!string.IsNullOrEmpty(content) && content.Length < 500 && !content.TrimStart().StartsWith('<'))
             {
                 errorMessage = $"API Error: {status} - {content}";
             }

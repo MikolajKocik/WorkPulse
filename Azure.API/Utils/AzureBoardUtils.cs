@@ -17,11 +17,9 @@ public static class AzureBoardUtils
         var all = new List<string>();
         CollectNodePaths(node, all);
 
-        foreach (var p in all.Distinct(StringComparer.OrdinalIgnoreCase))
-        {
-            if (!paths.Contains(p, StringComparer.OrdinalIgnoreCase))
-                paths.Add(p);
-        }
+        IEnumerable<string> toAdd = all.Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(p => !paths.Contains(p, StringComparer.OrdinalIgnoreCase));
+        paths.AddRange(toAdd);
     }
 
     private static void CollectNodePaths(ClassificationNode node, List<string> collector)
@@ -29,7 +27,7 @@ public static class AzureBoardUtils
         if (node == null) return;
 
         var raw = node.Path ?? string.Empty;
-        if (raw.StartsWith("\\")) raw = raw.Substring(1);
+        if (raw.StartsWith('\\')) raw = raw.Substring(1);
 
         var segments = raw.Split('\\', StringSplitOptions.RemoveEmptyEntries);
 
