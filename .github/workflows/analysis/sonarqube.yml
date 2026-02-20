@@ -21,6 +21,15 @@ jobs:
       SONAR_ORG: ${{ secrets.SONAR_ORG }}
 
     steps:
+      - name: Debug Secret Presence
+        run: |
+          if [ -z "${{ env.SONAR_ORG }}" ]; then
+            echo "Zmienna SONAR_ORG jest PUSTA!"
+            exit 1
+          else
+            echo "Zmienna SONAR_ORG jest ustawiona."
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
