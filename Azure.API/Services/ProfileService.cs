@@ -12,10 +12,10 @@ namespace Azure.API.Services;
 public class ProfileService : IProfileService
 {
     private HttpClient httpClient;
-    private WorkItemURI wi;
+    private WorkItemUri wi;
     private ILogger<ProfileService> logger;
 
-    public ProfileService(IHttpClientFactory httpClientFactory, IOptions<WorkItemURI> wi, ILogger<ProfileService> logger)
+    public ProfileService(IHttpClientFactory httpClientFactory, IOptions<WorkItemUri> wi, ILogger<ProfileService> logger)
     {
         this.httpClient = httpClientFactory.CreateClient("AzureDevOps");
         this.wi = wi.Value;

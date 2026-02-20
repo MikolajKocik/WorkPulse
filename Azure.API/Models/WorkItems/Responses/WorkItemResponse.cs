@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+#pragma warning disable CS8618
 namespace Azure.API.Models.WorkItems.Responses;
 
 /// <summary>
@@ -57,3 +58,4 @@ public class WorkItemResponse
         public string Href { get; set; }
     }
 }
+#pragma warning restore CS8618

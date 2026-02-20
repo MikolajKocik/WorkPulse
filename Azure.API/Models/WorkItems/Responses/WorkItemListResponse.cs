@@ -9,6 +9,7 @@ namespace Azure.API.Models.WorkItems.Responses;
 /// <summary>
 /// Response model for batch work items list from Azure DevOps API.
 /// </summary>
+#pragma warning disable CS8618
 public class WorkItemListResponse
 {
     /// <summary>
@@ -21,3 +22,4 @@ public class WorkItemListResponse
     /// </summary>
     public List<WorkItemResponse> Value { get; set; }
 }
+#pragma warning restore CS8618

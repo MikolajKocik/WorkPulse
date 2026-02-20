@@ -21,7 +21,7 @@ public class WorkItemServiceTests
     };
     private readonly Mock<IHttpClientFactory> httpClientFactoryMock;
     private readonly Mock<HttpMessageHandler> httpMessageHandlerMock;
-    private readonly Mock<IOptions<WorkItemURI>> optionsMock;
+    private readonly Mock<IOptions<WorkItemUri>> optionsMock;
     private readonly Mock<ILogger<WorkItemService>> loggerMock;
     private readonly WorkItemService service;
 
@@ -38,13 +38,14 @@ public class WorkItemServiceTests
         this.httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
             .Returns(client);
 
-        this.optionsMock = new Mock<IOptions<WorkItemURI>>();
-        this.optionsMock.Setup(x => x.Value).Returns(new WorkItemURI
+        this.optionsMock = new Mock<IOptions<WorkItemUri>>();
+        this.optionsMock.Setup(x => x.Value).Returns(new WorkItemUri
         {
             Organization = "test-org",
             Project = "test-project",
             DefaultType = "Task",
-            SupportedTypes = new List<string> { "Task", "Bug" }
+            SupportedTypes = new List<string> { "Task", "Bug" },
+            Pat = string.Empty
         });
 
         this.loggerMock = new Mock<ILogger<WorkItemService>>();
@@ -154,7 +155,7 @@ public class WorkItemServiceTests
         SetupHttpResponse(HttpStatusCode.NotFound, "Not Found");
 
         // Act
-        Func<Task> act = async () => await _service.DeleteWorkItemAsync(1);
+        Func<Task> act = async () => await this.service.DeleteWorkItemAsync(1);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>();

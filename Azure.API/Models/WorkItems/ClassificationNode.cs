@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+#pragma warning disable CS8618
 
 namespace Azure.API.Models.WorkItems;
 
@@ -31,3 +32,4 @@ public class ClassificationNodeList
     [JsonPropertyName("count")]
     public int Count { get; set; }
 }
+#pragma warning restore CS8618

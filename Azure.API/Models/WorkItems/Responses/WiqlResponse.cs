@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+#pragma warning disable CS8618
 
 namespace Azure.API.Models.WorkItems.Responses;
 
@@ -22,3 +23,4 @@ public class WorkItemReference
     [JsonPropertyName("url")]
     public string Url { get; set; }
 }
+#pragma warning restore CS8618

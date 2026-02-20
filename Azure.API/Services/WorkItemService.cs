@@ -16,7 +16,7 @@ namespace Azure.API.Services;
 
 public sealed class WorkItemService : IWorkItemService
 {
-    private readonly WorkItemURI wi;
+    private readonly WorkItemUri wi;
     private readonly HttpClient httpClient;
     private readonly ILogger<WorkItemService> logger;
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
@@ -26,7 +26,7 @@ public sealed class WorkItemService : IWorkItemService
     };
 
     public WorkItemService(
-        IOptions<WorkItemURI> wi,
+        IOptions<WorkItemUri> wi,
         IHttpClientFactory httpClientFactory,
         ILogger<WorkItemService> logger
         )

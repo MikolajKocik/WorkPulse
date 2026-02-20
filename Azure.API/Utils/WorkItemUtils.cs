@@ -94,7 +94,7 @@ public static class WorkItemUtils
     /// </summary>
     /// <param name="wi">The work item configuration.</param>
     /// <returns>Array of work item connection parameters.</returns>
-    public static string[] WorkItemConnectionParameters(WorkItemURI wi)
+    public static string[] WorkItemConnectionParameters(WorkItemUri wi)
     {
         string organization = wi.Organization;
         string project = wi.Project;

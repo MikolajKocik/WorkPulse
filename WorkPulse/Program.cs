@@ -18,7 +18,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-builder.Services.Configure<WorkItemURI>(builder.Configuration.GetSection("WorkItemURI"));
+builder.Services.Configure<WorkItemUri>(builder.Configuration.GetSection("WorkItemURI"));
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -29,7 +29,7 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddHttpClient("AzureDevOps", client =>
 {
-    var wiUri = builder.Configuration.GetSection("WorkItemURI").Get<WorkItemURI>();
+    var wiUri = builder.Configuration.GetSection("WorkItemURI").Get<WorkItemUri>();
     var pat = wiUri?.Pat;
     if (!string.IsNullOrEmpty(pat))
     {

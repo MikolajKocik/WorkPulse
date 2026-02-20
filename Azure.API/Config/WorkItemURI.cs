@@ -8,11 +8,11 @@ namespace Azure.API.Config;
 /// <summary>
 /// POCO settings class for work item connection to azure devops
 /// </summary>
-public class WorkItemURI
+public class WorkItemUri
 {
-    public string Organization { get; set; }
-    public string Project { get; set; }
-    public List<string> SupportedTypes { get; set; }
-    public string DefaultType { get; set; }
-    public string Pat { get; set; }
+    public required string Organization { get; set; }
+    public required string Project { get; set; }
+    public required List<string> SupportedTypes { get; set; }
+    public required string DefaultType { get; set; }
+    public required string Pat { get; set; }
 }

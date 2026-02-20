@@ -13,12 +13,12 @@ namespace Azure.API.Services;
 
 public class AzureBoardService : IAzureBoardService
 {
-    private readonly WorkItemURI wi;
+    private readonly WorkItemUri wi;
     private readonly HttpClient httpClient;
     private readonly ILogger<AzureBoardService> logger;
 
     public AzureBoardService(
-        IOptions<WorkItemURI> wi,
+        IOptions<WorkItemUri> wi,
         IHttpClientFactory httpClientFactory,
         ILogger<AzureBoardService> logger
         )

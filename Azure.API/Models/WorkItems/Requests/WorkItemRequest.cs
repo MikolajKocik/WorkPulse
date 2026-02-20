@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+#pragma warning disable CS8618
 using System.Linq;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -51,3 +52,4 @@ public class WorkItemRequest
     /// </summary>
     public string? IterationPath { get; set; }
 }
+#pragma warning restore CS8618

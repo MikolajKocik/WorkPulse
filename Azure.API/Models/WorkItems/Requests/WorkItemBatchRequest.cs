@@ -8,6 +8,7 @@ namespace Azure.API.Models.WorkItems.Requests;
 /// <summary>
 /// Request model for batch getting work items.
 /// </summary>
+#pragma warning disable CS8618
 public class WorkItemBatchRequest
 {
     /// <summary>
@@ -30,3 +31,4 @@ public class WorkItemBatchRequest
     /// </summary>
     public string? ErrorPolicy { get; set; } = "Omit";
 }
+#pragma warning restore CS8618
