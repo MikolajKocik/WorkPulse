@@ -9,6 +9,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Web
 @using Components.Pages.WorkItem
+@using System.Linq;
 
 @inject IWorkItemService WiService
 @inject IDialogService DialogService
@@ -175,8 +176,8 @@
     private WorkItemResponse? selectedItem = null;
     private WorkItemListResponse? Elements;
 
-    private HashSet<WorkItemResponse> selectedItems = new HashSet<WorkItemResponse>();
-    private SortDirection sortDirection = SortDirection.None;
+    private HashSet<WorkItemResponse?> selectedItems = new HashSet<WorkItemResponse?>();
+    private readonly SortDirection sortDirection = SortDirection.None;
 
     protected override async Task OnInitializedAsync()
     {
@@ -213,13 +214,15 @@
         }
     }
 
-    private bool FilterFunc(WorkItemResponse wi, string searchString)
+    private static bool FilterFunc(WorkItemResponse? wi, string searchString)
     {
+        if (wi == null)
+            return false;
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
 
         // Search in Fields values
-        foreach (var field in wi.Fields.Values)
+        foreach (var field in wi.Fields?.Values ?? Enumerable.Empty<object>())
         {
             if (field?.ToString()?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
                 return true;
@@ -302,8 +305,9 @@
 
                 await LoadData();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Snackbar.Add($"Failed to delete work item: {ex.Message}", Severity.Error);
                 throw;
             }
         }
