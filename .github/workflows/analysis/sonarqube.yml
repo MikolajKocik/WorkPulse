@@ -58,9 +58,9 @@ jobs:
       - name: Begin Sonar Analysis
         run: |
           dotnet-sonarscanner begin /k:"MikolajKocik_WorkPulse" \
-            /o:"${{ env.SONAR_ORG }}" \
+            /o:"mikolajkocik" \
             /d:sonar.host.url="${{ env.SONAR_HOST_URL }}" \
-            /d:sonar.login="${{ env.SONAR_TOKEN }}" \
+            /d:sonar.token="${{ env.SONAR_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml" \
             /d:sonar.exclusions="**/bin/**,**/obj/**"
 
