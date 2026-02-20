@@ -15,27 +15,31 @@ namespace Azure.API.Tests.UnitTests.WorkItems;
 
 public class WorkItemServiceTests
 {
-    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
-    private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
-    private readonly Mock<IOptions<WorkItemURI>> _optionsMock;
-    private readonly Mock<ILogger<WorkItemService>> _loggerMock;
-    private readonly WorkItemService _service;
+    private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    private readonly Mock<IHttpClientFactory> httpClientFactoryMock;
+    private readonly Mock<HttpMessageHandler> httpMessageHandlerMock;
+    private readonly Mock<IOptions<WorkItemURI>> optionsMock;
+    private readonly Mock<ILogger<WorkItemService>> loggerMock;
+    private readonly WorkItemService service;
 
     public WorkItemServiceTests()
     {
-        _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        this.httpMessageHandlerMock = new Mock<HttpMessageHandler>();
+        this.httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
-        var client = new HttpClient(_httpMessageHandlerMock.Object)
+        var client = new HttpClient(this.httpMessageHandlerMock.Object)
         {
             BaseAddress = new Uri("https://dev.azure.com/")
         };
 
-        _httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
+        this.httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
             .Returns(client);
 
-        _optionsMock = new Mock<IOptions<WorkItemURI>>();
-        _optionsMock.Setup(x => x.Value).Returns(new WorkItemURI
+        this.optionsMock = new Mock<IOptions<WorkItemURI>>();
+        this.optionsMock.Setup(x => x.Value).Returns(new WorkItemURI
         {
             Organization = "test-org",
             Project = "test-project",
@@ -43,9 +47,9 @@ public class WorkItemServiceTests
             SupportedTypes = new List<string> { "Task", "Bug" }
         });
 
-        _loggerMock = new Mock<ILogger<WorkItemService>>();
+        this.loggerMock = new Mock<ILogger<WorkItemService>>();
 
-        _service = new WorkItemService(_optionsMock.Object, _httpClientFactoryMock.Object, _loggerMock.Object);
+        this.service = new WorkItemService(this.optionsMock.Object, this.httpClientFactoryMock.Object, this.loggerMock.Object);
     }
 
     [Fact]
@@ -63,14 +67,10 @@ public class WorkItemServiceTests
             }
         };
 
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-        SetupHttpResponse(HttpStatusCode.OK, JsonSerializer.Serialize(response, jsonOptions));
+        SetupHttpResponse(HttpStatusCode.OK, JsonSerializer.Serialize(response, JsonOptions));
 
         // Act
-        var result = await _service.GetWorkItemListAsync(ids);
+        var result = await this.service.GetWorkItemListAsync(ids);
 
         // Assert
         result.Should().NotBeNull();
@@ -95,7 +95,7 @@ public class WorkItemServiceTests
         SetupHttpResponse(HttpStatusCode.OK, JsonSerializer.Serialize(response));
 
         // Act
-        var result = await _service.QueryWorkItemIdsAsync();
+        var result = await this.service.QueryWorkItemIdsAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -113,7 +113,7 @@ public class WorkItemServiceTests
         SetupHttpResponse(HttpStatusCode.OK, createdId);
 
         // Act
-        var result = await _service.CreateWorkItemAsync(request);
+        var result = await this.service.CreateWorkItemAsync(request);
 
         // Assert
         result.Should().Be(createdId);
@@ -128,7 +128,7 @@ public class WorkItemServiceTests
         SetupHttpResponse(HttpStatusCode.OK, updatedResponse);
 
         // Act
-        var result = await _service.UpdateWorkItemAsync(1, request);
+        var result = await this.service.UpdateWorkItemAsync(1, request);
 
         // Assert
         result.Should().Contain("Updated Task");
@@ -141,7 +141,7 @@ public class WorkItemServiceTests
         SetupHttpResponse(HttpStatusCode.OK, "");
 
         // Act
-        var result = await _service.DeleteWorkItemAsync(1);
+        var result = await this.service.DeleteWorkItemAsync(1);
 
         // Assert
         result.Should().BeTrue();
@@ -162,7 +162,7 @@ public class WorkItemServiceTests
 
     private void SetupHttpResponse(HttpStatusCode statusCode, string content)
     {
-        _httpMessageHandlerMock
+        this.httpMessageHandlerMock
             .Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",

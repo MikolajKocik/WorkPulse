@@ -19,6 +19,11 @@ public sealed class WorkItemService : IWorkItemService
     private readonly WorkItemURI wi;
     private readonly HttpClient httpClient;
     private readonly ILogger<WorkItemService> logger;
+    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
 
     public WorkItemService(
         IOptions<WorkItemURI> wi,
@@ -59,12 +64,6 @@ public sealed class WorkItemService : IWorkItemService
             Fields = fields ?? ["System.Id", "System.Title", "System.WorkItemType"]
         };
 
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
-
         using var content = new StringContent(JsonSerializer.Serialize(requestBody, jsonOptions), Encoding.UTF8, "application/json");
         using HttpResponseMessage response = await this.httpClient.PostAsync(url, content, ct);
 
@@ -101,7 +100,7 @@ public sealed class WorkItemService : IWorkItemService
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>();
+            var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>(jsonOptions);
             return result!;
         }
         else 
@@ -145,7 +144,7 @@ public sealed class WorkItemService : IWorkItemService
         
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadAsStringAsync();
+            var result = await response.Content.ReadAsStringAsync(ct);
             return result;
         }
         else 
@@ -169,12 +168,6 @@ public sealed class WorkItemService : IWorkItemService
         var query = new
         {
             query = $"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project ORDER BY [System.ChangedDate] DESC"
-        };
-
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
         };
 
         using var content = new StringContent(JsonSerializer.Serialize(query, jsonOptions), Encoding.UTF8, "application/json");
