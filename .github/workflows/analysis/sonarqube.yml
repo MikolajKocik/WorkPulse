@@ -56,6 +56,10 @@ jobs:
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Begin Sonar Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORG: ${{ secrets.SONAR_ORG }}
         run: |
           dotnet-sonarscanner begin /k:"MikolajKocik_WorkPulse" \
             /o:"$SONAR_ORG" \
