@@ -11,9 +11,9 @@ namespace Azure.API.Services;
 
 public class ProfileService : IProfileService
 {
-    private HttpClient httpClient;
-    private WorkItemUri wi;
-    private ILogger<ProfileService> logger;
+    private readonly HttpClient httpClient;
+    private readonly WorkItemUri wi;
+    private readonly ILogger<ProfileService> logger;
 
     public ProfileService(IHttpClientFactory httpClientFactory, IOptions<WorkItemUri> wi, ILogger<ProfileService> logger)
     {
