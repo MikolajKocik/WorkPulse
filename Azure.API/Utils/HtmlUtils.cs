@@ -3,8 +3,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace Azure.API.Utils;
 
-public static class HtmlUtils
+public static partial class HtmlUtils
 {
+    [GeneratedRegex("<.*?>")]
+    private static partial Regex HtmlTagRegex();
+
     /// <summary>
     /// Converts an HTML string to plain text by removing all HTML tags and decoding HTML entities.
     /// </summary>
@@ -17,7 +20,7 @@ public static class HtmlUtils
 
         html = html.Replace("</div>", " ").Replace("<br>", " ").Replace("</p>", " ");
 
-        string plainText = Regex.Replace(html, "<.*?>", String.Empty);
+        string plainText = HtmlTagRegex().Replace(html, String.Empty);
 
         plainText = WebUtility.HtmlDecode(plainText).Trim();
 
