@@ -14,6 +14,12 @@ jobs:
   Analysis:
     runs-on: ubuntu-latest
 
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      SONAR_ORG: ${{ secrets.SONAR_ORG }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,30 +43,15 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Build
-        run: dotnet build --no-restore -c Release
-
-      - name: Test (generate OpenCover)
-        run: |
-          dotnet test ./Azure.API.Tests/Azure.API.Tests.csproj -c Release --no-build \
-            /p:CollectCoverage=true \
-            /p:CoverletOutputFormat=opencover \
-            /p:CoverletOutput=TestResults/coverage.opencover.xml
-
       - name: Install SonarScanner
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Begin Sonar Analysis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_ORG: ${{ secrets.SONAR_ORG }}
         run: |
           dotnet-sonarscanner begin /k:"MikolajKocik_WorkPulse" \
-            /o:"${{ secrets.SONAR_ORG }}" \
-            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /o:"${{ env.SONAR_ORG }}" \
+            /d:sonar.host.url="${{ env.SONAR_HOST_URL }}" \
+            /d:sonar.login="${{ env.SONAR_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml" \
             /d:sonar.exclusions="**/bin/**,**/obj/**"
 
@@ -68,9 +59,7 @@ jobs:
         run: dotnet build --no-restore -c Release
 
       - name: Test
-        run: dotnet test --no-build -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+        run: dotnet test --no-build -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
 
       - name: End Sonar Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet-sonarscanner end /d:sonar.login="${{ env.SONAR_TOKEN }}"
