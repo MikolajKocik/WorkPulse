@@ -30,14 +30,6 @@ public class WorkItemServiceTests
         this.httpMessageHandlerMock = new Mock<HttpMessageHandler>();
         this.httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
-        var client = new HttpClient(this.httpMessageHandlerMock.Object)
-        {
-            BaseAddress = new Uri($"{this.optionsMock?.Object.Value.BaseUrl}")
-        };
-
-        this.httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
-            .Returns(client);
-
         this.optionsMock = new Mock<IOptions<AzureDevOpsOptions>>();
         this.optionsMock.Setup(x => x.Value).Returns(new AzureDevOpsOptions
         {
@@ -46,9 +38,17 @@ public class WorkItemServiceTests
             DefaultType = "Task",
             SupportedTypes = new List<string> { "Task", "Bug" },
             Pat = string.Empty,
-            BaseUrl = "https://dev.azure.com/test-org/test-project/_apis/wit",
-            EntitlementsBaseUrl = "https://vsaex.dev.azure.com/test-org"
+            BaseUrl = "https://dev.azure.com/",
+            EntitlementsBaseUrl = "https://vsaex.dev.azure.com"
         });
+
+        var client = new HttpClient(this.httpMessageHandlerMock.Object)
+        {
+            BaseAddress = new Uri(this.optionsMock.Object.Value.BaseUrl)
+        };
+
+        this.httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
+            .Returns(client);
 
         this.loggerMock = new Mock<ILogger<WorkItemService>>();
 
