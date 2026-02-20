@@ -25,9 +25,9 @@
                 <MudSelect T="string" @bind-Value="this.request.AssignedTo" Label="Select user profile" Variant="Variant.Outlined">
                     @if (this.profiles?.Count > 0)
                     {
-                        @foreach (var p in profiles)
+                        @foreach (var displayName in profiles.Select(p => p.DisplayName))
                         {
-                            <MudSelectItem T="string" Value="@p.DisplayName">@p.DisplayName</MudSelectItem>
+                            <MudSelectItem T="string" Value="@displayName">@displayName</MudSelectItem>
                         }
                     }
                     else

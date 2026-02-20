@@ -4,5 +4,5 @@ namespace WorkPulse.Services.Interfaces;
 
 public interface IUserContext
 {
-    public ClaimsPrincipal User { get; }
+    public ClaimsPrincipal? User { get; }
 }
