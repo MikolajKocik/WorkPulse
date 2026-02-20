@@ -16,7 +16,7 @@ namespace Azure.API.Services;
 
 public sealed class WorkItemService : IWorkItemService
 {
-    private readonly WorkItemUri wi;
+    private readonly AzureDevOpsOptions azureDevOpsOptions;
     private readonly HttpClient httpClient;
     private readonly ILogger<WorkItemService> logger;
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
@@ -26,12 +26,12 @@ public sealed class WorkItemService : IWorkItemService
     };
 
     public WorkItemService(
-        IOptions<WorkItemUri> wi,
+        IOptions<AzureDevOpsOptions> azureDevOpsOptions,
         IHttpClientFactory httpClientFactory,
         ILogger<WorkItemService> logger
         )
     {
-        this.wi = wi.Value;
+        this.azureDevOpsOptions = azureDevOpsOptions.Value;
         this.httpClient = httpClientFactory.CreateClient("AzureDevOps");
         this.logger = logger;
     }
@@ -55,8 +55,7 @@ public sealed class WorkItemService : IWorkItemService
             throw new ArgumentException("Maximum 200 IDs allowed.", nameof(ids));
         }
 
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitemsbatch?api-version=7.1";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/workitemsbatch?api-version=7.1";
 
         var requestBody = new WorkItemBatchRequest
         {
@@ -93,9 +92,7 @@ public sealed class WorkItemService : IWorkItemService
     /// <returns>The work item info.</returns>
     public async Task<WorkItemResponse> GetWorkItemInfoAsync(int id)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version=7.1";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/workitems/{id}?api-version=7.1";
         using HttpResponseMessage response = await this.httpClient.GetAsync(url);
 
         if (response.IsSuccessStatusCode)
@@ -119,21 +116,19 @@ public sealed class WorkItemService : IWorkItemService
     /// <returns>The ID of the created work item.</returns>
     public async Task<string> CreateWorkItemAsync(WorkItemRequest request, string? type = null, CancellationToken ct = default)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-
         if (type != null)
         {
-            if (!this.wi.SupportedTypes.Contains(type) || string.IsNullOrWhiteSpace(type))
+            if (!this.azureDevOpsOptions.SupportedTypes.Contains(type) || string.IsNullOrWhiteSpace(type))
             {
-                type = this.wi.DefaultType;
+                type = this.azureDevOpsOptions.DefaultType;
             }
         }
         else
         {
-            type = this.wi.DefaultType;
+            type = this.azureDevOpsOptions.DefaultType;
         }
 
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/${type}?api-version=7.1";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/workitems/${type}?api-version=7.1";
 
         List<object> operations = WorkItemUtils.RequestOperations(request);
 
@@ -162,8 +157,7 @@ public sealed class WorkItemService : IWorkItemService
     /// <returns>Array of work item IDs.</returns>
     public async Task<int[]> QueryWorkItemIdsAsync(string? filter = null, CancellationToken ct = default)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/wiql?api-version=7.1";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/wiql?api-version=7.1";
 
         var query = new
         {
@@ -197,9 +191,7 @@ public sealed class WorkItemService : IWorkItemService
     public async Task<bool> DeleteWorkItemAsync(int id)
     {
 
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version=7.1";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/workitems/{id}?api-version=7.1";
 
         using HttpResponseMessage response = await this.httpClient.DeleteAsync(url);
 
@@ -223,9 +215,7 @@ public sealed class WorkItemService : IWorkItemService
     /// <returns>The ID of the updated work item.</returns>
     public async Task<string> UpdateWorkItemAsync(int id, WorkItemRequest request, CancellationToken ct = default)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/workitems/{id}?api-version={wis[2]}";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/workitems/{id}?api-version=7.1";
 
         List<object> operations = WorkItemUtils.RequestOperations(request);
 

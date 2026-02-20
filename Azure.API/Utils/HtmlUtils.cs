@@ -51,7 +51,7 @@ public static class HtmlUtils
             var jsonString = value.ToString();
             if (string.IsNullOrWhiteSpace(jsonString)) return "N/A";
             
-            if (!jsonString.Trim().StartsWith("{")) return jsonString;
+            if (!jsonString.Trim().StartsWith('{')) return jsonString;
 
             using var doc = JsonDocument.Parse(jsonString);
             if (doc.RootElement.TryGetProperty("displayName", out var name))

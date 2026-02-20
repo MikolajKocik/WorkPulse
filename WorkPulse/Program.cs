@@ -18,7 +18,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-builder.Services.Configure<WorkItemUri>(builder.Configuration.GetSection("WorkItemURI"));
+builder.Services.Configure<AzureDevOpsOptions>(builder.Configuration.GetSection("AzureDevOpsOptions"));
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -29,14 +29,15 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddHttpClient("AzureDevOps", client =>
 {
-    var wiUri = builder.Configuration.GetSection("WorkItemURI").Get<WorkItemUri>();
+    var wiUri = builder.Configuration.GetSection("AzureDevOpsOptions").Get<AzureDevOpsOptions>();
     var pat = wiUri?.Pat;
     if (!string.IsNullOrEmpty(pat))
     {
         var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{pat}"));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
     }
-    client.BaseAddress = new Uri("https://dev.azure.com/");
+    
+    client.BaseAddress = new Uri($"{wiUri?.BaseUrl}");
 });
 
 builder.Services.AddHttpClient();
@@ -68,4 +69,4 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+await app.RunAsync();

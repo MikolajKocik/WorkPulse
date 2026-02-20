@@ -21,7 +21,7 @@ public class WorkItemServiceTests
     };
     private readonly Mock<IHttpClientFactory> httpClientFactoryMock;
     private readonly Mock<HttpMessageHandler> httpMessageHandlerMock;
-    private readonly Mock<IOptions<WorkItemUri>> optionsMock;
+    private readonly Mock<IOptions<AzureDevOpsOptions>> optionsMock;
     private readonly Mock<ILogger<WorkItemService>> loggerMock;
     private readonly WorkItemService service;
 
@@ -32,20 +32,22 @@ public class WorkItemServiceTests
 
         var client = new HttpClient(this.httpMessageHandlerMock.Object)
         {
-            BaseAddress = new Uri("https://dev.azure.com/")
+            BaseAddress = new Uri($"{this.optionsMock?.Object.Value.BaseUrl}")
         };
 
         this.httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
             .Returns(client);
 
-        this.optionsMock = new Mock<IOptions<WorkItemUri>>();
-        this.optionsMock.Setup(x => x.Value).Returns(new WorkItemUri
+        this.optionsMock = new Mock<IOptions<AzureDevOpsOptions>>();
+        this.optionsMock.Setup(x => x.Value).Returns(new AzureDevOpsOptions
         {
             Organization = "test-org",
             Project = "test-project",
             DefaultType = "Task",
             SupportedTypes = new List<string> { "Task", "Bug" },
-            Pat = string.Empty
+            Pat = string.Empty,
+            BaseUrl = "https://dev.azure.com/test-org/test-project/_apis/wit",
+            EntitlementsBaseUrl = "https://vsaex.dev.azure.com/test-org"
         });
 
         this.loggerMock = new Mock<ILogger<WorkItemService>>();

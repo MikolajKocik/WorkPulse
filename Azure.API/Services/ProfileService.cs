@@ -12,21 +12,19 @@ namespace Azure.API.Services;
 public class ProfileService : IProfileService
 {
     private readonly HttpClient httpClient;
-    private readonly WorkItemUri wi;
+    private readonly AzureDevOpsOptions azureDevOpsOptions;
     private readonly ILogger<ProfileService> logger;
 
-    public ProfileService(IHttpClientFactory httpClientFactory, IOptions<WorkItemUri> wi, ILogger<ProfileService> logger)
+    public ProfileService(IHttpClientFactory httpClientFactory, IOptions<AzureDevOpsOptions> azureDevOpsOptions, ILogger<ProfileService> logger)
     {
         this.httpClient = httpClientFactory.CreateClient("AzureDevOps");
-        this.wi = wi.Value;
+        this.azureDevOpsOptions = azureDevOpsOptions.Value;
         this.logger = logger;
     }
 
     public async Task<ProfileList> GetUserProfilesAsync(CancellationToken continuationToken = default)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-
-        string url = $"https://vsaex.dev.azure.com/{wis[0]}/_apis/userentitlements?api-version=7.2-preview.5";
+        string url = $"{this.azureDevOpsOptions.EntitlementsBaseUrl}/{this.azureDevOpsOptions.Organization}/_apis/userentitlements?api-version=7.2-preview.5";
 
         if (this.httpClient.DefaultRequestHeaders.Authorization == null)
         {

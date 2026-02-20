@@ -13,17 +13,18 @@ namespace Azure.API.Services;
 
 public class AzureBoardService : IAzureBoardService
 {
-    private readonly WorkItemUri wi;
+    private readonly AzureDevOpsOptions azureDevOpsOptions;
     private readonly HttpClient httpClient;
     private readonly ILogger<AzureBoardService> logger;
 
     public AzureBoardService(
-        IOptions<WorkItemUri> wi,
+        IOptions<AzureDevOpsOptions> azureDevOpsOptions,
+
         IHttpClientFactory httpClientFactory,
         ILogger<AzureBoardService> logger
         )
     {
-        this.wi = wi.Value;
+        this.azureDevOpsOptions = azureDevOpsOptions.Value;
         this.httpClient = httpClientFactory.CreateClient("AzureDevOps");
         this.logger = logger;
     }
@@ -36,8 +37,7 @@ public class AzureBoardService : IAzureBoardService
     /// <returns>The classification nodes.</returns>
     public async Task<List<string>> GetClassificationNodesAsync(string structureGroup, CancellationToken ct = default)
     {
-        string[] wis = WorkItemUtils.WorkItemConnectionParameters(this.wi);
-        string url = $"https://dev.azure.com/{wis[0]}/{wis[1]}/_apis/wit/classificationnodes/{structureGroup}?api-version=7.1&$depth=5";
+        string url = $"{this.azureDevOpsOptions.BaseUrl}/{this.azureDevOpsOptions.Organization}/{this.azureDevOpsOptions.Project}/_apis/wit/classificationnodes/{structureGroup}?api-version=7.1&$depth=5";
 
         using HttpResponseMessage response = await this.httpClient.GetAsync(url, ct);
 
