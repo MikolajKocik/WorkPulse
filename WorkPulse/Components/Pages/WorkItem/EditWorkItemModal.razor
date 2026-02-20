@@ -169,7 +169,7 @@
 
     private async Task Submit()
     {
-         if (editForm.EditContext.Validate())
+        if (editForm.EditContext != null && editForm.EditContext.Validate())
         {
             await this.HandleValidSubmit();
         }

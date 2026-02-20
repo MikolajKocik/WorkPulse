@@ -12,5 +12,5 @@ public sealed class UserContext : IUserContext
         this.context = context;
     }
 
-    public ClaimsPrincipal User => this.context.HttpContext?.User;
+    public ClaimsPrincipal? User => this.context.HttpContext?.User;
 }

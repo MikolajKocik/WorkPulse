@@ -18,9 +18,9 @@
              <MudSelect T="string" @bind-Value="this.request.AssignedTo" Label="Select user profile" Variant="Variant.Outlined">
                 @if (this.profiles?.Count > 0)
                 {
-                    @foreach (var p in profiles)
+                    foreach (var displayName in profiles.Select(p => p.DisplayName))
                     {
-                        <MudSelectItem T="string" Value="@p.DisplayName">@p.DisplayName</MudSelectItem>
+                        <MudSelectItem T="string" Value="@displayName">@displayName</MudSelectItem>
                     }
                 }
                 else
@@ -77,7 +77,7 @@
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; } = null!;
 
-    private EditForm editForm;
+    private EditForm? editForm;
     private WorkItemRequest request = new WorkItemRequest();
     private bool isSubmitting = false;
 
@@ -123,7 +123,7 @@
 
     private async Task Create()
     {
-        if (editForm.EditContext.Validate())
+        if (editForm?.EditContext != null && editForm.EditContext.Validate())
         {
             await HandleValidSubmit();
         }
