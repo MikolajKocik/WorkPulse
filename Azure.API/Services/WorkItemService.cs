@@ -71,7 +71,7 @@ public sealed class WorkItemService : IWorkItemService
         {
             string responseContent = await response.Content.ReadAsStringAsync(ct);
             this.logger.LogInformation("Response content: {Content}", responseContent);
-            if (responseContent.StartsWith("<"))
+            if (responseContent.StartsWith('<'))
             {
                 throw new Exception("Received HTML instead of JSON. Check API credentials or URL.");
             }
