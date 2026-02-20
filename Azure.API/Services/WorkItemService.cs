@@ -72,7 +72,7 @@ public sealed class WorkItemService : IWorkItemService
             this.logger.LogInformation("Response content: {Content}", responseContent);
             if (responseContent.StartsWith('<'))
             {
-                throw new Exception("Received HTML instead of JSON. Check API credentials or URL.");
+                throw new InvalidOperationException("Received HTML instead of JSON. Check API credentials or URL.");
             }
             var result = await response.Content.ReadFromJsonAsync<WorkItemListResponse>(jsonOptions, ct);
             this.logger.LogInformation("Successfully retrieved {Count} work items.", result?.Count ?? 0);
@@ -226,7 +226,7 @@ public sealed class WorkItemService : IWorkItemService
 
          if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadAsStringAsync();
+            var result = await response.Content.ReadAsStringAsync(ct);
             return result;
         }
         else 

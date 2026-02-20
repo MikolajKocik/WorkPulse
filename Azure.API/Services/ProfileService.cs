@@ -44,8 +44,8 @@ public class ProfileService : IProfileService
         }
         catch (JsonException ex)
         {
-            this.logger.LogError(ex, "Failed to parse user profiles JSON.");
-            throw;
+            this.logger.LogError(ex, "Failed to parse user profiles JSON. Content: {Content}", content);
+            throw new JsonException($"Failed to parse user profiles JSON. See inner exception for details. Content: {content}", ex);
         }
     }
 
@@ -101,47 +101,43 @@ public class ProfileService : IProfileService
         return false;
     }
 
-    private Profile? ExtractProfileFromElement(JsonElement item)
+    private static Profile? ExtractProfileFromElement(JsonElement item)
     {
         if (item.ValueKind != JsonValueKind.Object) return null;
 
-        string id = string.Empty;
+        string id = TryGetString(item, "id");
         string displayName = string.Empty;
         string email = string.Empty;
 
-        if (item.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.String)
-            id = idProp.GetString() ?? string.Empty;
-
         if (item.TryGetProperty("user", out var userProp) && userProp.ValueKind == JsonValueKind.Object)
         {
-            if (userProp.TryGetProperty("displayName", out var d1) && d1.ValueKind == JsonValueKind.String)
-                displayName = d1.GetString() ?? string.Empty;
-
-            if (userProp.TryGetProperty("mailAddress", out var m1) && m1.ValueKind == JsonValueKind.String)
-                email = m1.GetString() ?? string.Empty;
-
-            if (userProp.TryGetProperty("id", out var uid) && string.IsNullOrEmpty(id) && uid.ValueKind == JsonValueKind.String)
-                id = uid.GetString() ?? string.Empty;
-
-            if (string.IsNullOrEmpty(displayName) && userProp.TryGetProperty("uniqueName", out var un) && un.ValueKind == JsonValueKind.String)
-                displayName = un.GetString() ?? string.Empty;
+            displayName = TryGetString(userProp, "displayName");
+            email = TryGetString(userProp, "mailAddress");
+            if (string.IsNullOrEmpty(id))
+                id = TryGetString(userProp, "id");
+            if (string.IsNullOrEmpty(displayName))
+                displayName = TryGetString(userProp, "uniqueName");
         }
 
-        // Fallbacks
-        if (string.IsNullOrEmpty(displayName) && item.TryGetProperty("displayName", out var d2) && d2.ValueKind == JsonValueKind.String)
-            displayName = d2.GetString() ?? string.Empty;
+        if (string.IsNullOrEmpty(displayName))
+            displayName = TryGetString(item, "displayName");
 
         if (string.IsNullOrEmpty(email))
         {
-            if (item.TryGetProperty("mailAddress", out var m2) && m2.ValueKind == JsonValueKind.String)
-                email = m2.GetString() ?? string.Empty;
-
-            if (string.IsNullOrEmpty(email) && item.TryGetProperty("principalName", out var p1) && p1.ValueKind == JsonValueKind.String)
-                email = p1.GetString() ?? string.Empty;
+            email = TryGetString(item, "mailAddress");
+            if (string.IsNullOrEmpty(email))
+                email = TryGetString(item, "principalName");
         }
 
         if (string.IsNullOrEmpty(displayName) && string.IsNullOrEmpty(email)) return null;
 
         return new Profile { Id = id, DisplayName = displayName, Email = email };
+    }
+
+    private static string TryGetString(JsonElement element, string propertyName)
+    {
+        if (element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
+            return prop.GetString() ?? string.Empty;
+        return string.Empty;
     }
 }
