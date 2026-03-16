@@ -13,7 +13,10 @@ public sealed class Certificate
     public DateTime ExpiredDate { get; private set; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public bool IsActive { get; private set; }
-    public int ToExpire => (ExpiredDate - DateTime.UtcNow).Days;
+    public int ToExpire => (this.ExpiredDate - DateTime.UtcNow).Days;
+    public object? MetaData { get; private set; }
+    
+    public void UpdateMetadata(object data) => this.MetaData = data;
 
     public void DeactivateCertification()
     {
