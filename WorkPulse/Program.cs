@@ -1,14 +1,16 @@
-using WorkPulse.Components;
-using MudBlazor.Services;
 using Azure.API.Config;
-using System.Net.Http.Headers;
-using System.Text;
 using Azure.API.Services;
+using Azure.API.Services.Interfaces;
+using CertMonitor.API.Interfaces;
+using CertMonitor.API.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
-using Azure.API.Services.Interfaces;
-using WorkPulse.Services.Interfaces;
+using MudBlazor.Services;
+using System.Net.Http.Headers;
+using System.Text;
+using WorkPulse.Components;
 using WorkPulse.Services;
+using WorkPulse.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,7 @@ builder.Services.Configure<AzureDevOpsOptions>(builder.Configuration.GetSection(
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAzureBoardService, AzureBoardService>();
+builder.Services.AddScoped<ICertificateService, CertificateService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();

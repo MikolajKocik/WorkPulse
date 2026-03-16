@@ -1,0 +1,57 @@
+﻿@using CertMonitor.API.Interfaces;
+@using CertMonitor.API.Models;
+@using Utills;
+
+@attribute [Authorize]
+
+@inject ICertificateService CertService
+@inject IJSRuntime JS
+@page "/certificates"
+
+<MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Szukaj certyfikatu..." />
+
+<MudTable Items="@certs" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>Nazwa</MudTh>
+        <MudTh>Dni do wygaśnięcia</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Akcje</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nazwa">@context.Name</MudTd>
+        <MudTd DataLabel="Dni">
+            <MudChip T="string" Color="@(context.ToExpire < 7 ? Color.Error : Color.Success)">
+                @context.ToExpire dni
+            </MudChip>
+        </MudTd>
+        <MudTd>@(context.IsActive ? "Aktywny" : "Nieaktywny")</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Filled" OnClick="@(() => DownloadExcel())">Export</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<Certificate> certs = new();                
+    private List<Certificate> allCerts = new();
+
+    protected override async Task OnInitializedAsync()
+    {       
+        this.allCerts = await this.CertService.GetCertificatesAsync();
+        this.certs = allCerts;
+    }
+
+    private void OnSearch(string query)
+    {
+        this.certs = DataUtils.FilterData(allCerts, query); 
+    }
+
+    private async Task DownloadExcel()
+    {
+        string csvContent = this.CertService.ExportToCsv();
+
+        string fileName = $"Certyfikaty_{DateTime.UtcNow:yyyyMMdd_HHmm}.csv";
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, csvContent);
+    }
+}
