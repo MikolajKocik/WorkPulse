@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "Name": "Production SSL - WebApp",
+    "Type": 1,
+    "ExpiredDate": "2026-12-01",
+    "IsActive": true
+  },
+  {
+    "Id": "4bb95f64-5717-4562-b3fc-2c963f66afa7",
+    "Name": "Azure Key Vault Secret",
+    "Type": 2,
+    "ExpiredDate": "2026-03-20",
+    "IsActive": true
+  },
+  {
+    "Id": "5cc95f64-5717-4562-b3fc-2c963f66afa8",
+    "Name": "Wildcard *.dev.company.com",
+    "Type": 1,
+    "ExpiredDate": "2026-03-18",
+    "IsActive": true
+  },
+  {
+    "Id": "6dd95f64-5717-4562-b3fc-2c963f66afa9",
+    "Name": "GitHub Action Token - Deployment",
+    "Type": 3,
+    "ExpiredDate": "2025-12-31",
+    "IsActive": true
+  },
+  {
+    "Id": "7ee95f64-5717-4562-b3fc-2c963f66af10",
+    "Name": "Internal Root CA - Old",
+    "Type": 1,
+    "ExpiredDate": "2024-01-01",
+    "IsActive": false
+  },
+  {
+    "Id": "8ff95f64-5717-4562-b3fc-2c963f66af11",
+    "Name": "Docker Registry Auth",
+    "Type": 2,
+    "ExpiredDate": "2026-03-22",
+    "IsActive": true
+  },
+  {
+    "Id": "9aa95f64-5717-4562-b3fc-2c963f66af12",
+    "Name": "VPN Gateway Client Cert",
+    "Type": 1,
+    "ExpiredDate": "2027-06-15",
+    "IsActive": true
+  },
+  {
+    "Id": "0bb95f64-5717-4562-b3fc-2c963f66af13",
+    "Name": "Kubernetes Ingress Controller",
+    "Type": 1,
+    "ExpiredDate": "2026-03-17",
+    "IsActive": true
+  }
+]
