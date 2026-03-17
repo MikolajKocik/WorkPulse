@@ -1,0 +1,86 @@
+﻿@using CertMonitor.API.Interfaces;
+@using CertMonitor.API.Models;
+@using Utills;
+@using Interfaces;
+
+@attribute [Authorize]
+
+@inject ICertificateService CertService
+@inject ISystemService SystemService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+@implements IDisposable
+
+@page "/certificates"
+
+<MudTextField 
+    T="string" 
+    Class="mt-4 mb-2" 
+    ValueChanged="@(s => OnSearch(s))" 
+    Placeholder="Szukaj certyfikatu..."
+    Variant="Variant.Outlined"
+    Adornment="Adornment.Start"
+    AdornmentIcon="@Icons.Material.Filled.Search"
+/>
+
+<MudTable Items="@certs" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4 shadow-sm">
+    <HeaderContent>
+        <MudTh>Nazwa</MudTh>
+        <MudTh>Dni do wygaśnięcia</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Akcje</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nazwa">@context.Name</MudTd>
+        <MudTd DataLabel="Dni">
+            <MudChip T="string" Color="@(context.ToExpire < 7 ? Color.Error : Color.Success)">
+                @context.ToExpire dni
+            </MudChip>
+        </MudTd>
+        <MudTd>@(context.IsActive ? "Aktywny" : "Nieaktywny")</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Filled" OnClick="@(() => DownloadExcel())">Export</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<Certificate> certs = new();                
+    private List<Certificate> allCerts = new();
+
+    protected override async Task OnInitializedAsync()
+    {       
+        this.allCerts = await this.CertService.GetCertificatesAsync();
+        this.certs = allCerts;
+
+        this.CertService.OnDataProcessed += this.ShowNotification;
+        this.SystemService.OnSystemAlert += this.ShowNotification;
+    }
+
+    private void OnSearch(string query)
+    {
+        this.certs = DataUtils.FilterData(allCerts, query); 
+    }
+
+    private async Task DownloadExcel()
+    {
+        string csvContent = this.CertService.ExportToCsv();
+
+        string fileName = $"Certyfikaty_{DateTime.UtcNow:yyyyMMdd_HHmm}.csv";
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, csvContent);
+    }
+
+    private void ShowNotification(string message)
+    {
+        this.Snackbar.Add(message, Severity.Info);
+        this.InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        this.CertService.OnDataProcessed -= this.ShowNotification;
+        this.SystemService.OnSystemAlert -= this.ShowNotification;
+    }
+}
