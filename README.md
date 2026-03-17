@@ -63,7 +63,7 @@ Before running the app locally, fill in `appsettings.json` with your organizatio
 }
 ```
 
-> **Note:** In the deployed environment, these values are not stored in `appsettings.json`. They are configured as Azure App Service environment variables instead (see [Azure Environment Variables](#4-azure-environment-variables) below).
+> **Note:** In the deployed environment, these values are not stored in `appsettings.json`. They are configured as Azure App Service environment variables instead (see [Azure Environment Variables](#5-azure-environment-variables) below).
 
 ---
 
@@ -71,15 +71,29 @@ Before running the app locally, fill in `appsettings.json` with your organizatio
 
 The application is deployed to **Azure App Service** using GitHub Actions. Authentication between GitHub and Azure uses **OIDC (OpenID Connect)** — no long-lived secrets are stored. The pipeline publishes the build artifact directly to App Service.
 
+> **Important:** This project uses two separate Entra ID app registrations with distinct purposes. Do not mix them up:
+>
+> | Registration | Purpose |
+> |---|---|
+> | `GitHub-Actions-WorkPulse` | CI/CD only — allows GitHub Actions to deploy to Azure |
+> | `WorkPulse` | User authentication — allows users to sign in to the app via Entra ID |
+>
+> The `ClientId` in `appsettings.json` must come from the **WorkPulse** registration, not from `GitHub-Actions-WorkPulse`.
+
 ### 1. Create a Service Principal
 
 Run the following command to create a service principal with Contributor access scoped to your App Service:
 
 ```bash
 az ad sp create-for-rbac --name "GitHub-Actions-WorkPulse" --role contributor \
-    --scopes /subscriptions/{your-subscription-id}/resourceGroups/{your-resource-group}/providers/Microsoft.Web/sites/workpulse-h2etdwbhqbgzboez \
+    --scopes /subscriptions/{your-subscription-id}/resourceGroups/WorkPulse/providers/Microsoft.Web/sites/Workpulse \
     --sdk-auth
 ```
+
+> **Tip:** To verify the exact App Service name before running this command, use:
+> ```bash
+> az webapp list --resource-group WorkPulse --query "[].{name:name}"
+> ```
 
 Copy the full JSON output — you will need it in the next step.
 
@@ -108,13 +122,14 @@ In your repository go to **Settings → Secrets and variables → Actions** and 
 
 ### 4. Configure Redirect URI in Entra ID
 
-After the first deployment, register the App Service URL as a redirect URI in your Entra ID app registration:
+After the first deployment, register the App Service URL as a redirect URI in your **WorkPulse** Entra ID app registration (not `GitHub-Actions-WorkPulse`):
 
-1. Go to **Microsoft Entra ID → App registrations → your app → Authentication**.
+1. Go to **Microsoft Entra ID → App registrations → WorkPulse → Authentication**.
 2. Under **Redirect URIs**, add:
    ```
    https://{your-app-service-name}.azurewebsites.net/signin-oidc
    ```
+3. Make sure **ID tokens** is checked under **Implicit grant and hybrid flows**.
 
 ![Entra ID Redirect URI configuration](docs/ga-workpulse-redirect-url.PNG)
 
@@ -125,7 +140,7 @@ Configure the following environment variables in **Azure Portal → App Service 
 | Variable name | Description |
 |---|---|
 | `AzureAd__CallbackPath` | `/signin-oidc` |
-| `AzureAd__ClientId` | Your Entra ID app Client ID |
+| `AzureAd__ClientId` | Client ID from the **WorkPulse** app registration |
 | `AzureAd__Domain` | Your tenant domain (e.g. `contoso.onmicrosoft.com`) |
 | `AzureAd__Instance` | `https://login.microsoftonline.com/` |
 | `AzureAd__TenantId` | Your Entra ID Tenant ID |
@@ -144,13 +159,14 @@ Configure the following environment variables in **Azure Portal → App Service 
 
 1. Clone the repository to your local machine.
 2. Open a terminal in the solution root folder.
-3. Fill in `appsettings.json` as shown above.
-4. Restore dependencies:
+3. Fill in `appsettings.json` as shown above. Use the `ClientId` from the **WorkPulse** app registration.
+4. Make sure `https://localhost:{port}/signin-oidc` is added as a redirect URI in the **WorkPulse** Entra ID app registration. Check your port in `launchSettings.json` under the `https` profile.
+5. Restore dependencies:
    ```bash
    dotnet restore
    ```
-5. Run the application:
+6. Run the application using the `https` profile:
    ```bash
-   dotnet run --project WorkPulse
+   dotnet run --launch-profile https
    ```
-6. Open the URL shown in the terminal and sign in with your organization account.
+7. Open the URL shown in the terminal and sign in with your organization account.
