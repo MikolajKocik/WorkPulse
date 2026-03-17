@@ -1,5 +1,20 @@
 ﻿<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">WorkItems</MudNavLink>
-    <MudNavLink Href="/diagnostics" Match="NavLinkMatch.Prefix">Diagnostics</MudNavLink>
-    <MudNavLink Href="/certificates" Match="NavLinkMatch.Prefix">Certificates</MudNavLink>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">MONITORING</MudText>
+
+    @* WorkItems *@
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Assignment">
+        WorkItems
+    </MudNavLink>
+
+    @* Certificates *@
+    <MudNavLink Href="/certificates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VerifiedUser">
+        Certificates
+    </MudNavLink>
+
+    @* Diagnostics *@
+    <MudNavLink Href="/diagnostics" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Build">
+        Diagnostics
+    </MudNavLink>
+
+    <MudDivider Class="my-2" />
 </MudNavMenu>
