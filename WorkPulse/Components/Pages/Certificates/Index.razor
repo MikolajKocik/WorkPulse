@@ -10,7 +10,7 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-@implements IDisposable
+@implements IAsyncDisposable
 
 @page "/certificates"
 
@@ -49,6 +49,14 @@
     private List<Certificate> certs = new();                
     private List<Certificate> allCerts = new();
 
+    private IJSObjectReference? modul;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            modul = await JS.InvokeAsync<IJSObjectReference>("import", "/js/fileHelper.js");
+    }
+
     protected override async Task OnInitializedAsync()
     {       
         this.allCerts = await this.CertService.GetCertificatesAsync();
@@ -69,7 +77,7 @@
 
         string fileName = $"Certyfikaty_{DateTime.UtcNow:yyyyMMdd_HHmm}.csv";
 
-        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, csvContent);
+        await this.modul!.InvokeVoidAsync("downloadFile", fileName, csvContent);
     }
 
     private void ShowNotification(string message)
@@ -78,8 +86,11 @@
         this.InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
+        if (modul is not null)
+            await modul.DisposeAsync();
+
         this.CertService.OnDataProcessed -= this.ShowNotification;
         this.SystemService.OnSystemAlert -= this.ShowNotification;
     }
