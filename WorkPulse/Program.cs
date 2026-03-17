@@ -2,6 +2,7 @@ using Azure.API.Config;
 using Azure.API.Services;
 using Azure.API.Services.Interfaces;
 using CertMonitor.API.Interfaces;
+using CertMonitor.API.Jobs;
 using CertMonitor.API.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
@@ -30,6 +31,8 @@ builder.Services.AddScoped<ISystemService, SystemService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
+
+builder.Services.AddHostedService<CertificateWatcher>();
 
 builder.Services.AddHttpClient("AzureDevOps", client =>
 {

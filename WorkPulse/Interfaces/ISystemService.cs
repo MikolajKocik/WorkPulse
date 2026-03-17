@@ -4,4 +4,6 @@ public interface ISystemService
 {
     event Action<string>? OnSystemAlert;
     Task RunHealthAsync();
+    Task CheckRunningProcessesAsync();
+    Task MonitorAppResourcesAsync();
 }

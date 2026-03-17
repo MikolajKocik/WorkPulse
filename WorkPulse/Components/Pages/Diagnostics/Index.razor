@@ -1,0 +1,83 @@
+﻿@using Interfaces;
+
+@inject ISystemService SystemService
+@implements IDisposable
+
+@page "/diagnostics"
+
+<MudText Typo="Typo.h4" Class="mb-4 mt-4">System Diagnostics</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">System Info</MudText>
+            <MudList T="string">
+                <MudListItem Text="@($"User: {Environment.UserName}")" Icon="@Icons.Material.Filled.Person" />
+                <MudListItem Text="@($"OS: {Environment.OSVersion}")" Icon="@Icons.Material.Filled.Computer" />
+            </MudList>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SystemService.RunHealthAsync">
+                Run Manual Check
+            </MudButton>
+            <MudStack Row="true" Class="mt-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="SystemService.RunHealthAsync"
+                           StartIcon="@Icons.Material.Filled.HealthAndSafety">
+                    Health Check
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           OnClick="SystemService.MonitorAppResourcesAsync"
+                           StartIcon="@Icons.Material.Filled.Memory">
+                    Resources
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Info"
+                           OnClick="SystemService.CheckRunningProcessesAsync"
+                           StartIcon="@Icons.Material.Filled.Search">
+                    Scan Edge
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">Live Diagnostics Stream</MudText>
+            <div style="height: 300px; overflow-y: auto; background: #222; color: #0f0; font-family: monospace;" class="pa-2">
+                @foreach (var log in logs)
+                {
+                    <p style="@GetLogColor(log)">> @log</p>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<string> logs = new();
+
+    protected override void OnInitialized()
+    {
+        SystemService.OnSystemAlert += HandleAlert;
+    }
+
+    private void HandleAlert(string msg)
+    {
+        logs.Insert(0, $"{DateTime.Now:HH:mm:ss}: {msg}");
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetLogColor(string log)
+    {
+        if (log.Contains("[RESOURCE]")) return "color: #00e5ff;";
+        if (log.Contains("[DIAG]")) return "color: #00ff00;";
+        if (log.Contains("[PROCESS]")) return "color: #ffab40;";
+
+        return "color: #ffffff;";
+    }
+
+    public void Dispose() => SystemService.OnSystemAlert -= HandleAlert;
+}
