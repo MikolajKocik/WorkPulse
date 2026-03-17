@@ -83,7 +83,17 @@ az ad sp create-for-rbac --name "GitHub-Actions-WorkPulse" --role contributor \
 
 Copy the full JSON output — you will need it in the next step.
 
-### 2. Add GitHub Repository Secrets
+### 2. Assign IAM Role
+
+The service principal also needs a role assignment at the subscription level so GitHub Actions can deploy to App Service:
+
+1. Go to **Azure Portal → Subscriptions** and select the subscription containing your App Service.
+2. Click **Access control (IAM) → Add → Add role assignment**.
+3. Set **Role** to `Contributor`.
+4. Under **Members**, select your registered app: `GitHub-Actions-WorkPulse`.
+5. Save the assignment.
+
+### 3. Add GitHub Repository Secrets
 
 In your repository go to **Settings → Secrets and variables → Actions** and add the following secrets:
 
@@ -96,7 +106,7 @@ In your repository go to **Settings → Secrets and variables → Actions** and 
 
 ![GitHub Repository Secrets](docs/repo-secrets.PNG)
 
-### 3. Configure Redirect URI in Entra ID
+### 4. Configure Redirect URI in Entra ID
 
 After the first deployment, register the App Service URL as a redirect URI in your Entra ID app registration:
 
@@ -108,7 +118,7 @@ After the first deployment, register the App Service URL as a redirect URI in yo
 
 ![Entra ID Redirect URI configuration](docs/ga-workpulse-redirect-url.PNG)
 
-### 4. Azure Environment Variables
+### 5. Azure Environment Variables
 
 Configure the following environment variables in **Azure Portal → App Service → Settings → Environment variables**:
 
