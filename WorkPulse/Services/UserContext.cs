@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using WorkPulse.Services.Interfaces;
+using WorkPulse.Interfaces;
 
 namespace WorkPulse.Services;
 

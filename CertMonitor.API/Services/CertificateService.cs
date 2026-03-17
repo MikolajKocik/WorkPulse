@@ -10,6 +10,8 @@ public sealed class CertificateService : ICertificateService
     private List<Certificate> _certificates = new();
     private readonly string _jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "certificates.json");
 
+    public event Action<string>? OnDataProcessed;
+
     public void ProcessIncomingData(Guid id, object rawData)
     {
         var cert = this._certificates.FirstOrDefault(c => c.Id == id);
@@ -32,6 +34,8 @@ public sealed class CertificateService : ICertificateService
             int days = jsonNum.GetInt32();
             cert.RenewCertificate(DateOnly.FromDateTime(DateTime.UtcNow.AddDays(days)));
         }
+
+        this.OnDataProcessed?.Invoke($"Zaktualizowano certyfikat: {cert.Name}. Obecne dni do wygaśnięcia: {cert.ToExpire}");
     }
 
     public string ExportToCsv()

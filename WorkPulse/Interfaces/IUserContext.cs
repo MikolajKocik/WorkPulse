@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace WorkPulse.Services.Interfaces;
+namespace WorkPulse.Interfaces;
 
 public interface IUserContext
 {

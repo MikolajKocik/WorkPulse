@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Identity.Web" Version="4.3.0" />
     <PackageReference Include="MudBlazor" Version="8.15.0" />
     <ProjectReference Include="..\Azure.API\Azure.API.csproj" />
+    <ProjectReference Include="..\CertMonitor.API\CertMonitor.API.csproj" />
   </ItemGroup>
 
 </Project>
