@@ -1,6 +1,6 @@
 ﻿@using CertMonitor.API.Interfaces;
 @using CertMonitor.API.Models;
-@using Utills;
+@using Utils;
 @using Interfaces;
 
 @attribute [Authorize]
@@ -24,7 +24,7 @@
     AdornmentIcon="@Icons.Material.Filled.Search"
 />
 
-<MudTable Items="@certs" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4 shadow-sm">
+<MudTable Items="@certs" Hover="true" Breakpoint="Breakpoint.Sm">
     <HeaderContent>
         <MudTh>Nazwa</MudTh>
         <MudTh>Dni do wygaśnięcia</MudTh>

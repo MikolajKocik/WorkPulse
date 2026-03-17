@@ -9,8 +9,12 @@ using MudBlazor.Services;
 using System.Net.Http.Headers;
 using System.Text;
 using WorkPulse.Components;
+<<<<<<< HEAD
 using WorkPulse.Interfaces;
+=======
+>>>>>>> ee7705610140febc7ec3fdb84e521b4faabee139
 using WorkPulse.Services;
+using WorkPulse.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +30,10 @@ builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IAzureBoardService, AzureBoardService>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<ISystemService, SystemService>(); 
+=======
+>>>>>>> ee7705610140febc7ec3fdb84e521b4faabee139
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();

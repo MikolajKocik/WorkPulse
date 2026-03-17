@@ -1,4 +1,4 @@
-﻿namespace WorkPulse.Utills;
+﻿namespace WorkPulse.Utils;
 
 /// <summary>
 /// Provides utility methods for filtering and processing collections of data.
