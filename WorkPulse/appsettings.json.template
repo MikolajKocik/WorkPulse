@@ -1,0 +1,25 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "",
+      "Microsoft.AspNetCore": ""
+    }
+  },
+  "AzureDevOpsOptions": {
+    "Organization": "",
+    "Project": "",
+    "SupportedTypes": [],
+    "DefaultType": "",
+    "Pat": "",
+    "BaseUrl": "",
+    "EntitlementsBaseUrl": ""
+  },
+  "AzureAd": {
+    "Instance": "",
+    "Domain": "",
+    "TenantId": "",
+    "ClientId": "",
+    "CallbackPath": ""
+  },
+  "AllowedHosts": ""
+}
